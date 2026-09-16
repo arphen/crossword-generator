@@ -1,0 +1,5 @@
+node_modules/
+artifacts/
+reports/
+.stryker-tmp/
+.DS_Store

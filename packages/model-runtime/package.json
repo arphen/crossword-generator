@@ -1,0 +1,21 @@
+{
+  "name": "@crossword/model-runtime",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "files": ["src"],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  },
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.84"
+  }
+}
