@@ -1,0 +1,7 @@
+#!/bin/sh
+# Keep the generated repository map in the commit that changes the tree.
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+bash .scripts/generate-repo-map.sh
+git add docs/REPO_MAP.md

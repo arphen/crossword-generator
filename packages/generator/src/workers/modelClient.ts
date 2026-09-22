@@ -9,15 +9,21 @@ import {
   type ModelWorkerConfig,
   type ModelWorkerOperation,
   type ModelWorkerRequest,
-  type RuntimeProbe
+  type RuntimeProbe,
 } from '@crossword/model-runtime';
 
 export interface ModelWorkerClient {
   configure(config: ModelWorkerConfig): Promise<BrokerResult<void>>;
   install(signal?: AbortSignal): Promise<BrokerResult<void>>;
   load(signal?: AbortSignal): Promise<BrokerResult<void>>;
-  generateCandidates(request: CandidateRequest, signal?: AbortSignal): Promise<BrokerResult<readonly CandidateSuggestion[]>>;
-  composeClues(request: Readonly<{ answer: string; intendedSense: string }>, signal?: AbortSignal): Promise<BrokerResult<readonly ClueDraft[]>>;
+  generateCandidates(
+    request: CandidateRequest,
+    signal?: AbortSignal,
+  ): Promise<BrokerResult<readonly CandidateSuggestion[]>>;
+  composeClues(
+    request: Readonly<{ answer: string; intendedSense: string }>,
+    signal?: AbortSignal,
+  ): Promise<BrokerResult<readonly ClueDraft[]>>;
   unload(signal?: AbortSignal): Promise<BrokerResult<void>>;
   state(): ModelState;
   cancel(requestId: string): void;
@@ -32,7 +38,12 @@ type PendingJob = {
 };
 
 function responseRequestId(value: unknown): string | undefined {
-  return typeof value === 'object' && value !== null && 'requestId' in value && typeof value.requestId === 'string' ? value.requestId : undefined;
+  return typeof value === 'object' &&
+    value !== null &&
+    'requestId' in value &&
+    typeof value.requestId === 'string'
+    ? value.requestId
+    : undefined;
 }
 
 export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
@@ -44,19 +55,24 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
     const job = pending.get(requestId);
     if (!job) return;
     pending.delete(requestId);
-    if (job.signal && job.onAbort) job.signal.removeEventListener('abort', job.onAbort);
+    if (job.signal && job.onAbort)
+      job.signal.removeEventListener('abort', job.onAbort);
     action(job);
   };
 
   const rejectAll = (error: Error) => {
-    for (const requestId of pending.keys()) settle(requestId, (job) => job.reject(error));
+    for (const requestId of pending.keys())
+      settle(requestId, (job) => job.reject(error));
   };
 
   const handleMessage = (event: MessageEvent<unknown>) => {
     const message = parseModelWorkerResponse(event.data);
     if (!message) {
       const requestId = responseRequestId(event.data);
-      if (requestId) settle(requestId, (job) => job.reject(new Error('Invalid model worker response')));
+      if (requestId)
+        settle(requestId, (job) =>
+          job.reject(new Error('Invalid model worker response')),
+        );
       else rejectAll(new Error('Invalid model worker response'));
       return;
     }
@@ -68,21 +84,36 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
       settle(message.requestId, (job) => job.resolve(message.result));
       return;
     }
-    if (message.requestId) settle(message.requestId, (job) => job.reject(new Error(message.message)));
+    if (message.requestId)
+      settle(message.requestId, (job) =>
+        job.reject(new Error(message.message)),
+      );
     else rejectAll(new Error(message.message));
   };
 
-  const handleError = () => rejectAll(new Error('Model worker stopped unexpectedly'));
+  const handleError = () =>
+    rejectAll(new Error('Model worker stopped unexpectedly'));
   worker.addEventListener('message', handleMessage);
   worker.addEventListener('error', handleError);
 
   const sendCancel = (requestId: string) => {
     if (!pending.has(requestId)) return;
-    const message: ModelWorkerRequest = { version: 1, type: 'cancel', requestId };
+    const message: ModelWorkerRequest = {
+      version: 1,
+      type: 'cancel',
+      requestId,
+    };
     worker.postMessage(message);
   };
 
-  const run = <T>(operation: ModelWorkerOperation, payload: CandidateRequest | Readonly<{ answer: string; intendedSense: string }> | undefined, signal?: AbortSignal): Promise<BrokerResult<T>> => {
+  const run = <T>(
+    operation: ModelWorkerOperation,
+    payload:
+      | CandidateRequest
+      | Readonly<{ answer: string; intendedSense: string }>
+      | undefined,
+    signal?: AbortSignal,
+  ): Promise<BrokerResult<T>> => {
     const requestId = `model-${nextRequestId++}`;
     const promise = new Promise<BrokerResult<unknown>>((resolve, reject) => {
       const job: PendingJob = { resolve, reject, signal };
@@ -92,7 +123,13 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
       }
       pending.set(requestId, job);
     });
-    worker.postMessage({ version: 1, type: 'execute', requestId, operation, payload });
+    worker.postMessage({
+      version: 1,
+      type: 'execute',
+      requestId,
+      operation,
+      payload,
+    });
     if (signal?.aborted) sendCancel(requestId);
     return promise as Promise<BrokerResult<T>>;
   };
@@ -100,14 +137,22 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
   return {
     configure(config) {
       const requestId = `model-${nextRequestId++}`;
-      const promise = new Promise<BrokerResult<unknown>>((resolve, reject) => pending.set(requestId, { resolve, reject }));
+      const promise = new Promise<BrokerResult<unknown>>((resolve, reject) =>
+        pending.set(requestId, { resolve, reject }),
+      );
       worker.postMessage({ version: 1, type: 'configure', requestId, config });
       return promise as Promise<BrokerResult<void>>;
     },
     install: (signal) => run<void>('install', undefined, signal),
     load: (signal) => run<void>('load', undefined, signal),
-    generateCandidates: (request, signal) => run<readonly CandidateSuggestion[]>('generate-candidates', request, signal),
-    composeClues: (request, signal) => run<readonly ClueDraft[]>('compose-clues', request, signal),
+    generateCandidates: (request, signal) =>
+      run<readonly CandidateSuggestion[]>(
+        'generate-candidates',
+        request,
+        signal,
+      ),
+    composeClues: (request, signal) =>
+      run<readonly ClueDraft[]>('compose-clues', request, signal),
     unload: (signal) => run<void>('unload', undefined, signal),
     state: () => currentState,
     cancel: sendCancel,
@@ -116,12 +161,14 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
       worker.removeEventListener('error', handleError);
       rejectAll(new Error('Model worker client disposed'));
       worker.terminate();
-    }
+    },
   };
 }
 
 export function createBrowserModelWorkerClient(): ModelWorkerClient {
-  const worker = new Worker(new URL('./modelWorker.ts', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./modelWorker.ts', import.meta.url), {
+    type: 'module',
+  });
   return createModelWorkerClient(worker);
 }
 

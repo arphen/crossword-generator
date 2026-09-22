@@ -39,7 +39,11 @@ export type FillProgress = Readonly<{
   bestScore: number;
 }>;
 
-export type FillFailureCode = 'unsatisfiable' | 'cancelled' | 'resource-limit' | 'invalid-request';
+export type FillFailureCode =
+  | 'unsatisfiable'
+  | 'cancelled'
+  | 'resource-limit'
+  | 'invalid-request';
 
 export type FillSolution = Readonly<{
   assignments: Readonly<Record<string, FillCandidate>>;
@@ -64,10 +68,11 @@ export type FillOptions = Readonly<{
 
 type Bits = Uint32Array;
 
-type IndexedCandidate = FillCandidate & Readonly<{
-  normalizedWord: string;
-  index: number;
-}>;
+type IndexedCandidate = FillCandidate &
+  Readonly<{
+    normalizedWord: string;
+    index: number;
+  }>;
 
 type IndexedRequest = Readonly<{
   slots: readonly FillSlot[];
@@ -114,10 +119,6 @@ function removeBit(bits: Bits, index: number): boolean {
   return true;
 }
 
-function hasBit(bits: Bits, index: number): boolean {
-  return (bits[index >>> 5]! & (1 << (index & 31))) !== 0;
-}
-
 function candidateIndexes(bits: Bits): number[] {
   const indexes: number[] = [];
   for (let wordIndex = 0; wordIndex < bits.length; wordIndex += 1) {
@@ -141,45 +142,97 @@ function seededTieBreak(seed: number, value: string): number {
   return hash;
 }
 
-function normalizeCandidate(candidate: FillCandidate, index: number): IndexedCandidate | undefined {
+function normalizeCandidate(
+  candidate: FillCandidate,
+  index: number,
+): IndexedCandidate | undefined {
   const normalizedWord = candidate.word.trim().toUpperCase();
-  if (!/^[A-Z]+$/.test(normalizedWord) || !Number.isFinite(candidate.score) || !candidate.lexemeId || candidate.sourceIds.length === 0) return undefined;
+  if (
+    !/^[A-Z]+$/.test(normalizedWord) ||
+    !Number.isFinite(candidate.score) ||
+    !candidate.lexemeId ||
+    candidate.sourceIds.length === 0
+  )
+    return undefined;
   return { ...candidate, normalizedWord, index };
 }
 
-function createIndex(request: FillRequest): IndexedRequest | { failure: FillResult['failure'] } {
+function createIndex(
+  request: FillRequest,
+): IndexedRequest | { failure: FillResult['failure'] } {
   const slotsById = new Map<string, FillSlot>();
   for (const slot of request.slots) {
-    if (slotsById.has(slot.id) || !slot.id || !Number.isInteger(slot.length) || slot.length < 1 || (slot.pattern !== undefined && (slot.pattern.length !== slot.length || !/^[A-Z.]*$/.test(slot.pattern)))) {
-      return { failure: { code: 'invalid-request', message: `Invalid fill slot: ${slot.id}`, nodes: 0 } };
+    if (
+      slotsById.has(slot.id) ||
+      !slot.id ||
+      !Number.isInteger(slot.length) ||
+      slot.length < 1 ||
+      (slot.pattern !== undefined &&
+        (slot.pattern.length !== slot.length ||
+          !/^[A-Z.]*$/.test(slot.pattern)))
+    ) {
+      return {
+        failure: {
+          code: 'invalid-request',
+          message: `Invalid fill slot: ${slot.id}`,
+          nodes: 0,
+        },
+      };
     }
     slotsById.set(slot.id, slot);
   }
-  if (slotsById.size === 0) return { failure: { code: 'invalid-request', message: 'Fill request has no slots', nodes: 0 } };
+  if (slotsById.size === 0)
+    return {
+      failure: {
+        code: 'invalid-request',
+        message: 'Fill request has no slots',
+        nodes: 0,
+      },
+    };
 
   const candidates: IndexedCandidate[] = [];
   const candidatesByLength = new Map<number, number[]>();
   const wordIds = new Set<string>();
   for (const [index, candidate] of request.candidates.entries()) {
     const normalized = normalizeCandidate(candidate, index);
-    if (!normalized || wordIds.has(normalized.normalizedWord) || request.excludedWords?.some((word) => word.toUpperCase() === normalized.normalizedWord)) continue;
+    if (
+      !normalized ||
+      wordIds.has(normalized.normalizedWord) ||
+      request.excludedWords?.some(
+        (word) => word.toUpperCase() === normalized.normalizedWord,
+      )
+    )
+      continue;
     wordIds.add(normalized.normalizedWord);
     candidates.push({ ...normalized, index: candidates.length });
-    const indexes = candidatesByLength.get(normalized.normalizedWord.length) ?? [];
+    const indexes =
+      candidatesByLength.get(normalized.normalizedWord.length) ?? [];
     indexes.push(candidates.length - 1);
     candidatesByLength.set(normalized.normalizedWord.length, indexes);
   }
-  if (candidates.length === 0) return { failure: { code: 'unsatisfiable', message: 'No eligible candidates remain', nodes: 0 } };
+  if (candidates.length === 0)
+    return {
+      failure: {
+        code: 'unsatisfiable',
+        message: 'No eligible candidates remain',
+        nodes: 0,
+      },
+    };
 
   const positionBits = new Map<string, Bits>();
   const wordCount = candidates.length;
   const bitWords = Math.ceil(wordCount / 32);
   for (const candidate of candidates) {
-    for (let position = 0; position < candidate.normalizedWord.length; position += 1) {
+    for (
+      let position = 0;
+      position < candidate.normalizedWord.length;
+      position += 1
+    ) {
       const letter = candidate.normalizedWord[position]!;
       const key = `${candidate.normalizedWord.length}:${position}:${letter}`;
       const bits = positionBits.get(key) ?? new Uint32Array(bitWords);
-      bits[candidate.index >>> 5] = bits[candidate.index >>> 5]! | (1 << (candidate.index & 31));
+      bits[candidate.index >>> 5] =
+        bits[candidate.index >>> 5]! | (1 << (candidate.index & 31));
       positionBits.set(key, bits);
     }
   }
@@ -188,8 +241,23 @@ function createIndex(request: FillRequest): IndexedRequest | { failure: FillResu
   for (const intersection of request.intersections) {
     const slot = slotsById.get(intersection.slotId);
     const other = slotsById.get(intersection.otherSlotId);
-    if (!slot || !other || !Number.isInteger(intersection.position) || !Number.isInteger(intersection.otherPosition) || intersection.position < 0 || intersection.position >= slot.length || intersection.otherPosition < 0 || intersection.otherPosition >= other.length) {
-      return { failure: { code: 'invalid-request', message: 'Intersection references an invalid slot position', nodes: 0 } };
+    if (
+      !slot ||
+      !other ||
+      !Number.isInteger(intersection.position) ||
+      !Number.isInteger(intersection.otherPosition) ||
+      intersection.position < 0 ||
+      intersection.position >= slot.length ||
+      intersection.otherPosition < 0 ||
+      intersection.otherPosition >= other.length
+    ) {
+      return {
+        failure: {
+          code: 'invalid-request',
+          message: 'Intersection references an invalid slot position',
+          nodes: 0,
+        },
+      };
     }
     const entries = intersectionsBySlot.get(intersection.slotId) ?? [];
     entries.push(intersection);
@@ -204,16 +272,27 @@ function createIndex(request: FillRequest): IndexedRequest | { failure: FillResu
     positionBits,
     slotById: slotsById,
     intersectionsBySlot,
-    excludedWords: new Set(request.excludedWords?.map((word) => word.toUpperCase()) ?? [])
+    excludedWords: new Set(
+      request.excludedWords?.map((word) => word.toUpperCase()) ?? [],
+    ),
   };
 }
 
 function initialDomain(index: IndexedRequest, slot: FillSlot): Bits {
   const domain = new Uint32Array(Math.ceil(index.candidates.length / 32));
-  for (const candidateIndex of index.candidatesByLength.get(slot.length) ?? []) {
+  for (const candidateIndex of index.candidatesByLength.get(slot.length) ??
+    []) {
     const candidate = index.candidates[candidateIndex]!;
-    if (slot.pattern && [...slot.pattern].some((letter, position) => letter !== '.' && candidate.normalizedWord[position] !== letter)) continue;
-    domain[candidateIndex >>> 5] = domain[candidateIndex >>> 5]! | (1 << (candidateIndex & 31));
+    if (
+      slot.pattern &&
+      [...slot.pattern].some(
+        (letter, position) =>
+          letter !== '.' && candidate.normalizedWord[position] !== letter,
+      )
+    )
+      continue;
+    domain[candidateIndex >>> 5] =
+      domain[candidateIndex >>> 5]! | (1 << (candidateIndex & 31));
   }
   return domain;
 }
@@ -223,22 +302,29 @@ function compatibleBits(
   targetLength: number,
   targetPosition: number,
   sourcePosition: number,
-  source: Bits
+  source: Bits,
 ): Bits {
   const result = new Uint32Array(source.length);
   for (const candidateIndex of candidateIndexes(source)) {
     const candidate = index.candidates[candidateIndex]!;
     const letter = candidate.normalizedWord[sourcePosition];
     if (!letter) continue;
-    const allowed = index.positionBits.get(`${targetLength}:${targetPosition}:${letter}`);
+    const allowed = index.positionBits.get(
+      `${targetLength}:${targetPosition}:${letter}`,
+    );
     if (allowed) {
-      for (let wordIndex = 0; wordIndex < result.length; wordIndex += 1) result[wordIndex] = result[wordIndex]! | allowed[wordIndex]!;
+      for (let wordIndex = 0; wordIndex < result.length; wordIndex += 1)
+        result[wordIndex] = result[wordIndex]! | allowed[wordIndex]!;
     }
   }
   return result;
 }
 
-function propagate(index: IndexedRequest, domains: Map<string, Bits>, assignments: Map<string, number>): boolean {
+function propagate(
+  index: IndexedRequest,
+  domains: Map<string, Bits>,
+  assignments: Map<string, number>,
+): boolean {
   let changed = true;
   while (changed) {
     changed = false;
@@ -253,14 +339,14 @@ function propagate(index: IndexedRequest, domains: Map<string, Bits>, assignment
         leftSlot.length,
         intersection.position,
         intersection.otherPosition,
-        right
+        right,
       );
       const allowedRight = compatibleBits(
         index,
         rightSlot.length,
         intersection.otherPosition,
         intersection.position,
-        left
+        left,
       );
       changed ||= intersectInto(left, allowedLeft);
       changed ||= intersectInto(right, allowedRight);
@@ -274,7 +360,11 @@ function propagate(index: IndexedRequest, domains: Map<string, Bits>, assignment
         const domain = domains.get(slot.id);
         if (!domain) return false;
         for (const otherIndex of candidateIndexes(domain)) {
-          if (index.candidates[otherIndex]!.normalizedWord === candidate.normalizedWord) changed ||= removeBit(domain, otherIndex);
+          if (
+            index.candidates[otherIndex]!.normalizedWord ===
+            candidate.normalizedWord
+          )
+            changed ||= removeBit(domain, otherIndex);
         }
         if (bitCount(domain) === 0) return false;
       }
@@ -283,52 +373,89 @@ function propagate(index: IndexedRequest, domains: Map<string, Bits>, assignment
   return true;
 }
 
-function selectSlot(index: IndexedRequest, domains: Map<string, Bits>, assignments: Map<string, number>): FillSlot | undefined {
+function selectSlot(
+  index: IndexedRequest,
+  domains: Map<string, Bits>,
+  assignments: Map<string, number>,
+): FillSlot | undefined {
   return index.slots
     .filter((slot) => !assignments.has(slot.id))
     .sort((left, right) => {
-      const sizeDelta = bitCount(domains.get(left.id)!) - bitCount(domains.get(right.id)!);
+      const sizeDelta =
+        bitCount(domains.get(left.id)!) - bitCount(domains.get(right.id)!);
       if (sizeDelta !== 0) return sizeDelta;
-      const pressureDelta = (index.intersectionsBySlot.get(right.id)?.length ?? 0) - (index.intersectionsBySlot.get(left.id)?.length ?? 0);
+      const pressureDelta =
+        (index.intersectionsBySlot.get(right.id)?.length ?? 0) -
+        (index.intersectionsBySlot.get(left.id)?.length ?? 0);
       return pressureDelta || left.id.localeCompare(right.id);
     })[0];
 }
 
-function remainingScoreUpperBound(index: IndexedRequest, domains: Map<string, Bits>, assignments: Map<string, number>): number {
+function remainingScoreUpperBound(
+  index: IndexedRequest,
+  domains: Map<string, Bits>,
+  assignments: Map<string, number>,
+): number {
   let bound = 0;
   for (const slot of index.slots) {
     if (assignments.has(slot.id)) continue;
     const domain = domains.get(slot.id);
     if (!domain) return Number.NEGATIVE_INFINITY;
     const best = candidateIndexes(domain)
-      .map((candidateIndex) => index.candidates[candidateIndex]?.score ?? Number.NEGATIVE_INFINITY)
-      .reduce((maximum, score) => Math.max(maximum, score), Number.NEGATIVE_INFINITY);
+      .map(
+        (candidateIndex) =>
+          index.candidates[candidateIndex]?.score ?? Number.NEGATIVE_INFINITY,
+      )
+      .reduce(
+        (maximum, score) => Math.max(maximum, score),
+        Number.NEGATIVE_INFINITY,
+      );
     if (best === Number.NEGATIVE_INFINITY) return best;
     bound += best;
   }
   return bound;
 }
 
-export function solveFill(request: FillRequest, options: FillOptions = {}): FillResult {
+export function solveFill(
+  request: FillRequest,
+  options: FillOptions = {},
+): FillResult {
   const indexed = createIndex(request);
-  if ('failure' in indexed) return { status: 'failed', failure: indexed.failure };
+  if ('failure' in indexed)
+    return { status: 'failed', failure: indexed.failure };
   const maxNodes = request.maxNodes ?? 50_000;
   const seed = request.seed ?? 0;
   let nodes = 0;
   let bestScore = Number.NEGATIVE_INFINITY;
   let best: FillSolution | undefined;
 
-  const search = (domains: Map<string, Bits>, assignments: Map<string, number>, score: number): boolean => {
+  const search = (
+    domains: Map<string, Bits>,
+    assignments: Map<string, number>,
+    score: number,
+  ): boolean => {
     nodes += 1;
     if (options.signal?.aborted) return false;
     if (nodes > maxNodes) return false;
-    if (best && score + remainingScoreUpperBound(indexed, domains, assignments) <= bestScore) return false;
+    if (
+      best &&
+      score + remainingScoreUpperBound(indexed, domains, assignments) <=
+        bestScore
+    )
+      return false;
     const slot = selectSlot(indexed, domains, assignments);
-    options.onProgress?.({ type: 'progress', nodes, assigned: assignments.size, openSlots: indexed.slots.length - assignments.size, bestScore });
+    options.onProgress?.({
+      type: 'progress',
+      nodes,
+      assigned: assignments.size,
+      openSlots: indexed.slots.length - assignments.size,
+      bestScore,
+    });
     if (!slot) {
       if (score >= (request.qualityThreshold ?? Number.NEGATIVE_INFINITY)) {
         const result: Record<string, FillCandidate> = {};
-        for (const [slotId, candidateIndex] of assignments) result[slotId] = indexed.candidates[candidateIndex]!;
+        for (const [slotId, candidateIndex] of assignments)
+          result[slotId] = indexed.candidates[candidateIndex]!;
         if (!best || score > bestScore) {
           best = { assignments: result, score, nodes };
           bestScore = score;
@@ -337,61 +464,126 @@ export function solveFill(request: FillRequest, options: FillOptions = {}): Fill
       return false;
     }
 
-    const values = candidateIndexes(domains.get(slot.id)!)
-      .sort((left, right) => {
+    const values = candidateIndexes(domains.get(slot.id)!).sort(
+      (left, right) => {
         const leftCandidate = indexed.candidates[left]!;
         const rightCandidate = indexed.candidates[right]!;
-        return rightCandidate.score - leftCandidate.score
-          || seededTieBreak(seed, leftCandidate.normalizedWord) - seededTieBreak(seed, rightCandidate.normalizedWord);
-      });
+        return (
+          rightCandidate.score - leftCandidate.score ||
+          seededTieBreak(seed, leftCandidate.normalizedWord) -
+            seededTieBreak(seed, rightCandidate.normalizedWord)
+        );
+      },
+    );
     for (const candidateIndex of values) {
       if (options.signal?.aborted) return false;
-      const nextDomains = new Map([...domains].map(([id, domain]) => [id, cloneBits(domain)] as const));
+      const nextDomains = new Map(
+        [...domains].map(([id, domain]) => [id, cloneBits(domain)] as const),
+      );
       const nextAssignments = new Map(assignments).set(slot.id, candidateIndex);
-      nextDomains.set(slot.id, new Uint32Array(nextDomains.get(slot.id)!.length));
+      nextDomains.set(
+        slot.id,
+        new Uint32Array(nextDomains.get(slot.id)!.length),
+      );
       const selectedDomain = nextDomains.get(slot.id)!;
-      selectedDomain[candidateIndex >>> 5] = selectedDomain[candidateIndex >>> 5]! | (1 << (candidateIndex & 31));
-      if (propagate(indexed, nextDomains, nextAssignments)) search(nextDomains, nextAssignments, score + indexed.candidates[candidateIndex]!.score);
+      selectedDomain[candidateIndex >>> 5] =
+        selectedDomain[candidateIndex >>> 5]! | (1 << (candidateIndex & 31));
+      if (propagate(indexed, nextDomains, nextAssignments))
+        search(
+          nextDomains,
+          nextAssignments,
+          score + indexed.candidates[candidateIndex]!.score,
+        );
       if (nodes > maxNodes) return false;
     }
     return false;
   };
 
-  const domains = new Map(indexed.slots.map((slot) => [slot.id, initialDomain(indexed, slot)] as const));
-  if (!propagate(indexed, domains, new Map())) return { status: 'failed', failure: { code: 'unsatisfiable', message: 'Initial crossing constraints have no solution', nodes } };
+  const domains = new Map(
+    indexed.slots.map(
+      (slot) => [slot.id, initialDomain(indexed, slot)] as const,
+    ),
+  );
+  if (!propagate(indexed, domains, new Map()))
+    return {
+      status: 'failed',
+      failure: {
+        code: 'unsatisfiable',
+        message: 'Initial crossing constraints have no solution',
+        nodes,
+      },
+    };
   search(domains, new Map(), 0);
   if (best) return { status: 'solved', solution: best };
-  const code: FillFailureCode = options.signal?.aborted ? 'cancelled' : nodes > maxNodes ? 'resource-limit' : 'unsatisfiable';
-  return { status: 'failed', failure: { code, message: code === 'cancelled' ? 'Fill search cancelled' : code === 'resource-limit' ? 'Fill search reached its node budget' : 'No valid fill satisfies the constraints', nodes } };
+  const code: FillFailureCode = options.signal?.aborted
+    ? 'cancelled'
+    : nodes > maxNodes
+      ? 'resource-limit'
+      : 'unsatisfiable';
+  return {
+    status: 'failed',
+    failure: {
+      code,
+      message:
+        code === 'cancelled'
+          ? 'Fill search cancelled'
+          : code === 'resource-limit'
+            ? 'Fill search reached its node budget'
+            : 'No valid fill satisfies the constraints',
+      nodes,
+    },
+  };
 }
 
 function yieldToHost(): Promise<void> {
-  const host = globalThis as typeof globalThis & { setTimeout?: (callback: () => void, delayMs: number) => unknown };
+  const host = globalThis as typeof globalThis & {
+    setTimeout?: (callback: () => void, delayMs: number) => unknown;
+  };
   return typeof host.setTimeout === 'function'
     ? new Promise((resolve) => host.setTimeout!(resolve, 0))
     : Promise.resolve();
 }
 
-export async function solveFillAsync(request: FillRequest, options: FillOptions = {}): Promise<FillResult> {
+export async function solveFillAsync(
+  request: FillRequest,
+  options: FillOptions = {},
+): Promise<FillResult> {
   const indexed = createIndex(request);
-  if ('failure' in indexed) return { status: 'failed', failure: indexed.failure };
+  if ('failure' in indexed)
+    return { status: 'failed', failure: indexed.failure };
   const maxNodes = request.maxNodes ?? 50_000;
   const seed = request.seed ?? 0;
   let nodes = 0;
   let bestScore = Number.NEGATIVE_INFINITY;
   let best: FillSolution | undefined;
 
-  const search = async (domains: Map<string, Bits>, assignments: Map<string, number>, score: number): Promise<boolean> => {
+  const search = async (
+    domains: Map<string, Bits>,
+    assignments: Map<string, number>,
+    score: number,
+  ): Promise<boolean> => {
     nodes += 1;
     if (nodes % 32 === 0) await yieldToHost();
     if (options.signal?.aborted || nodes > maxNodes) return false;
-    if (best && score + remainingScoreUpperBound(indexed, domains, assignments) <= bestScore) return false;
+    if (
+      best &&
+      score + remainingScoreUpperBound(indexed, domains, assignments) <=
+        bestScore
+    )
+      return false;
     const slot = selectSlot(indexed, domains, assignments);
-    options.onProgress?.({ type: 'progress', nodes, assigned: assignments.size, openSlots: indexed.slots.length - assignments.size, bestScore });
+    options.onProgress?.({
+      type: 'progress',
+      nodes,
+      assigned: assignments.size,
+      openSlots: indexed.slots.length - assignments.size,
+      bestScore,
+    });
     if (!slot) {
       if (score >= (request.qualityThreshold ?? Number.NEGATIVE_INFINITY)) {
         const result: Record<string, FillCandidate> = {};
-        for (const [slotId, candidateIndex] of assignments) result[slotId] = indexed.candidates[candidateIndex]!;
+        for (const [slotId, candidateIndex] of assignments)
+          result[slotId] = indexed.candidates[candidateIndex]!;
         if (!best || score > bestScore) {
           best = { assignments: result, score, nodes };
           bestScore = score;
@@ -400,30 +592,73 @@ export async function solveFillAsync(request: FillRequest, options: FillOptions 
       return false;
     }
 
-    const values = candidateIndexes(domains.get(slot.id)!)
-      .sort((left, right) => {
+    const values = candidateIndexes(domains.get(slot.id)!).sort(
+      (left, right) => {
         const leftCandidate = indexed.candidates[left]!;
         const rightCandidate = indexed.candidates[right]!;
-        return rightCandidate.score - leftCandidate.score
-          || seededTieBreak(seed, leftCandidate.normalizedWord) - seededTieBreak(seed, rightCandidate.normalizedWord);
-      });
+        return (
+          rightCandidate.score - leftCandidate.score ||
+          seededTieBreak(seed, leftCandidate.normalizedWord) -
+            seededTieBreak(seed, rightCandidate.normalizedWord)
+        );
+      },
+    );
     for (const candidateIndex of values) {
       if (options.signal?.aborted) return false;
-      const nextDomains = new Map([...domains].map(([id, domain]) => [id, cloneBits(domain)] as const));
+      const nextDomains = new Map(
+        [...domains].map(([id, domain]) => [id, cloneBits(domain)] as const),
+      );
       const nextAssignments = new Map(assignments).set(slot.id, candidateIndex);
-      nextDomains.set(slot.id, new Uint32Array(nextDomains.get(slot.id)!.length));
+      nextDomains.set(
+        slot.id,
+        new Uint32Array(nextDomains.get(slot.id)!.length),
+      );
       const selectedDomain = nextDomains.get(slot.id)!;
-      selectedDomain[candidateIndex >>> 5] = selectedDomain[candidateIndex >>> 5]! | (1 << (candidateIndex & 31));
-      if (propagate(indexed, nextDomains, nextAssignments)) await search(nextDomains, nextAssignments, score + indexed.candidates[candidateIndex]!.score);
+      selectedDomain[candidateIndex >>> 5] =
+        selectedDomain[candidateIndex >>> 5]! | (1 << (candidateIndex & 31));
+      if (propagate(indexed, nextDomains, nextAssignments))
+        await search(
+          nextDomains,
+          nextAssignments,
+          score + indexed.candidates[candidateIndex]!.score,
+        );
       if (nodes > maxNodes) return false;
     }
     return false;
   };
 
-  const domains = new Map(indexed.slots.map((slot) => [slot.id, initialDomain(indexed, slot)] as const));
-  if (!propagate(indexed, domains, new Map())) return { status: 'failed', failure: { code: 'unsatisfiable', message: 'Initial crossing constraints have no solution', nodes } };
+  const domains = new Map(
+    indexed.slots.map(
+      (slot) => [slot.id, initialDomain(indexed, slot)] as const,
+    ),
+  );
+  if (!propagate(indexed, domains, new Map()))
+    return {
+      status: 'failed',
+      failure: {
+        code: 'unsatisfiable',
+        message: 'Initial crossing constraints have no solution',
+        nodes,
+      },
+    };
   await search(domains, new Map(), 0);
   if (best) return { status: 'solved', solution: best };
-  const code: FillFailureCode = options.signal?.aborted ? 'cancelled' : nodes > maxNodes ? 'resource-limit' : 'unsatisfiable';
-  return { status: 'failed', failure: { code, message: code === 'cancelled' ? 'Fill search cancelled' : code === 'resource-limit' ? 'Fill search reached its node budget' : 'No valid fill satisfies the constraints', nodes } };
+  const code: FillFailureCode = options.signal?.aborted
+    ? 'cancelled'
+    : nodes > maxNodes
+      ? 'resource-limit'
+      : 'unsatisfiable';
+  return {
+    status: 'failed',
+    failure: {
+      code,
+      message:
+        code === 'cancelled'
+          ? 'Fill search cancelled'
+          : code === 'resource-limit'
+            ? 'Fill search reached its node budget'
+            : 'No valid fill satisfies the constraints',
+      nodes,
+    },
+  };
 }

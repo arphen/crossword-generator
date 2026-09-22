@@ -1,0 +1,9 @@
+#!/bin/sh
+# A final fast guard for commits made without the local pre-commit hook.
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+if ! bash .scripts/generate-repo-map.sh --check; then
+  echo 'PUSH BLOCKED: docs/REPO_MAP.md is stale; run make map-update and commit the result.' >&2
+  exit 1
+fi

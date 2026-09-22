@@ -3,4 +3,5 @@ artifacts/
 coverage/
 reports/
 .stryker-tmp/
-.DS_Store
+docs/REPO_MAP.md
+package-lock.json

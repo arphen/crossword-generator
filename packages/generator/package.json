@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./model-client": "./src/workers/modelClient.ts",
@@ -11,10 +13,16 @@
     "./model-worker": "./src/workers/modelWorker.ts",
     "./constructor-worker": "./src/workers/constructorWorker.ts"
   },
-  "scripts": { "test": "vitest run", "build": "tsc --noEmit" },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --noEmit"
+  },
   "dependencies": {
     "@crossword/construction": "0.1.0",
     "@crossword/model-runtime": "0.1.0"
   },
-  "devDependencies": { "typescript": "5.9.2", "vitest": "3.2.4" }
+  "devDependencies": {
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  }
 }

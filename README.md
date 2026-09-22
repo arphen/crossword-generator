@@ -13,15 +13,29 @@ Framework-independent, in-browser crossword construction, extracted from `crossw
 Use Node 24 and npm 11 (the consuming app's toolchain).
 
 ```sh
-npm ci
-npm test
-npm run build
+make setup
+make doctor
+make test
+make typecheck
+make check
 npm run pack:packages
 # Optional, potentially expensive:
-npm run test:mutation
+make mutation-test
 ```
 
 Tests use synthetic fixtures and fake model adapters; they do not download weights or establish real WebGPU generation quality. Extraction exposed missing DOM library declarations and two pre-existing test type errors, corrected without changing generation algorithms.
+
+`make check` is the local quality gate. It runs TypeScript checks, ESLint,
+Prettier, the generated repository-map check, and the coverage suite. Changes
+to the deterministic fill engine must also pass `make mutation-test`; the
+initial mutation floor is 55%.
+
+`make setup` installs the tracked Git hooks. The pre-commit hook regenerates
+and stages `docs/REPO_MAP.md`; the pre-push hook verifies that the committed map
+is current.
+
+Agent-facing repository conventions are in [AGENTS.md](AGENTS.md), and the
+bounded navigation index is [docs/REPO_MAP.md](docs/REPO_MAP.md).
 
 ## Integrate into the browser app
 

@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { solveFill, solveFillAsync, type FillCandidate, type FillRequest } from './csp';
+import {
+  solveFill,
+  solveFillAsync,
+  type FillCandidate,
+  type FillRequest,
+} from './csp';
 
 const candidate = (word: string, score: number): FillCandidate => ({
   word,
   score,
   lexemeId: `lexeme-${word}`,
-  sourceIds: ['fixture']
+  sourceIds: ['fixture'],
 });
 
 function crossingRequest(): FillRequest {
@@ -13,10 +18,17 @@ function crossingRequest(): FillRequest {
     seed: 11,
     slots: [
       { id: 'across', length: 3, pattern: 'C..', importance: 1 },
-      { id: 'down', length: 3, pattern: '..T', importance: 1 }
+      { id: 'down', length: 3, pattern: '..T', importance: 1 },
     ],
-    intersections: [{ slotId: 'across', position: 2, otherSlotId: 'down', otherPosition: 2 }],
-    candidates: [candidate('CAT', 3), candidate('COT', 1), candidate('EAT', 2), candidate('OAT', 0.5)]
+    intersections: [
+      { slotId: 'across', position: 2, otherSlotId: 'down', otherPosition: 2 },
+    ],
+    candidates: [
+      candidate('CAT', 3),
+      candidate('COT', 1),
+      candidate('EAT', 2),
+      candidate('OAT', 0.5),
+    ],
   };
 }
 
@@ -33,14 +45,19 @@ describe('deterministic fill CSP', () => {
 
   it('continues past the first valid fill to maximize total score', () => {
     const result = solveFill({
-      slots: [{ id: 'left', length: 3 }, { id: 'right', length: 4 }],
-      intersections: [{ slotId: 'left', position: 0, otherSlotId: 'right', otherPosition: 0 }],
+      slots: [
+        { id: 'left', length: 3 },
+        { id: 'right', length: 4 },
+      ],
+      intersections: [
+        { slotId: 'left', position: 0, otherSlotId: 'right', otherPosition: 0 },
+      ],
       candidates: [
         candidate('AAA', 100),
         candidate('BBB', 1),
         candidate('AADD', 0),
-        candidate('BCCC', 100)
-      ]
+        candidate('BCCC', 100),
+      ],
     });
 
     expect(result.status).toBe('solved');
@@ -54,17 +71,22 @@ describe('deterministic fill CSP', () => {
     const result = solveFill({
       slots: [
         { id: 'across', length: 3, pattern: 'C..' },
-        { id: 'down', length: 4, pattern: '..A.' }
+        { id: 'down', length: 4, pattern: '..A.' },
       ],
       intersections: [
-        { slotId: 'across', position: 1, otherSlotId: 'down', otherPosition: 2 }
+        {
+          slotId: 'across',
+          position: 1,
+          otherSlotId: 'down',
+          otherPosition: 2,
+        },
       ],
       candidates: [
         candidate('CAT', 3),
         candidate('COT', 2),
         candidate('BEAR', 4),
-        candidate('BOAT', 1)
-      ]
+        candidate('BOAT', 1),
+      ],
     });
 
     expect(result.status).toBe('solved');
@@ -75,10 +97,13 @@ describe('deterministic fill CSP', () => {
 
   it('enforces all-different words and excludes recent answers', () => {
     const result = solveFill({
-      slots: [{ id: 'one', length: 3 }, { id: 'two', length: 3 }],
+      slots: [
+        { id: 'one', length: 3 },
+        { id: 'two', length: 3 },
+      ],
       intersections: [],
       candidates: [candidate('CAT', 2), candidate('DOG', 1)],
-      excludedWords: ['CAT']
+      excludedWords: ['CAT'],
     });
 
     expect(result.status).toBe('failed');
@@ -89,42 +114,53 @@ describe('deterministic fill CSP', () => {
     {
       name: 'empty slot set',
       slots: [],
-      intersections: []
+      intersections: [],
     },
     {
       name: 'duplicate slot id',
-      slots: [{ id: 'same', length: 3 }, { id: 'same', length: 3 }],
-      intersections: []
+      slots: [
+        { id: 'same', length: 3 },
+        { id: 'same', length: 3 },
+      ],
+      intersections: [],
     },
     {
       name: 'non-positive slot length',
       slots: [{ id: 'bad', length: 0 }],
-      intersections: []
+      intersections: [],
     },
     {
       name: 'malformed slot pattern',
       slots: [{ id: 'bad', length: 3, pattern: 'A#.' }],
-      intersections: []
+      intersections: [],
     },
     {
       name: 'unknown intersection slot',
       slots: [{ id: 'known', length: 3 }],
       intersections: [
-        { slotId: 'known', position: 0, otherSlotId: 'missing', otherPosition: 0 }
-      ]
+        {
+          slotId: 'known',
+          position: 0,
+          otherSlotId: 'missing',
+          otherPosition: 0,
+        },
+      ],
     },
     {
       name: 'out-of-range intersection position',
-      slots: [{ id: 'left', length: 3 }, { id: 'right', length: 3 }],
+      slots: [
+        { id: 'left', length: 3 },
+        { id: 'right', length: 3 },
+      ],
       intersections: [
-        { slotId: 'left', position: 3, otherSlotId: 'right', otherPosition: 0 }
-      ]
-    }
+        { slotId: 'left', position: 3, otherSlotId: 'right', otherPosition: 0 },
+      ],
+    },
   ])('rejects an invalid request: $name', ({ slots, intersections }) => {
     const result = solveFill({
       slots,
       intersections,
-      candidates: [candidate('CAT', 1)]
+      candidates: [candidate('CAT', 1)],
     });
 
     expect(result.status).toBe('failed');
@@ -144,8 +180,8 @@ describe('deterministic fill CSP', () => {
         candidate('A1A', 40),
         { ...candidate('OWL', 30), score: Number.NaN },
         { ...candidate('EMU', 20), lexemeId: '' },
-        { ...candidate('YAK', 10), sourceIds: [] }
-      ]
+        { ...candidate('YAK', 10), sourceIds: [] },
+      ],
     });
 
     expect(result.status).toBe('solved');
@@ -158,10 +194,12 @@ describe('deterministic fill CSP', () => {
     const request = {
       slots: [{ id: 'only', length: 3 }],
       intersections: [],
-      candidates: [candidate('CAT', 4)]
+      candidates: [candidate('CAT', 4)],
     } satisfies FillRequest;
 
-    expect(solveFill({ ...request, qualityThreshold: 4 }).status).toBe('solved');
+    expect(solveFill({ ...request, qualityThreshold: 4 }).status).toBe(
+      'solved',
+    );
     const belowThreshold = solveFill({ ...request, qualityThreshold: 5 });
     expect(belowThreshold.status).toBe('failed');
     expect(belowThreshold.failure?.code).toBe('unsatisfiable');
@@ -171,29 +209,36 @@ describe('deterministic fill CSP', () => {
     const unsatisfiable = solveFill({
       slots: [
         { id: 'left', length: 3, pattern: 'C..' },
-        { id: 'right', length: 3, pattern: 'D..' }
+        { id: 'right', length: 3, pattern: 'D..' },
       ],
-      intersections: [{ slotId: 'left', position: 0, otherSlotId: 'right', otherPosition: 0 }],
-      candidates: [candidate('CAT', 1), candidate('DOG', 1)]
+      intersections: [
+        { slotId: 'left', position: 0, otherSlotId: 'right', otherPosition: 0 },
+      ],
+      candidates: [candidate('CAT', 1), candidate('DOG', 1)],
     });
     expect(unsatisfiable.status).toBe('failed');
     expect(unsatisfiable.failure?.code).toBe('unsatisfiable');
 
     const controller = new AbortController();
     controller.abort();
-    const cancelled = solveFill(crossingRequest(), { signal: controller.signal });
+    const cancelled = solveFill(crossingRequest(), {
+      signal: controller.signal,
+    });
     expect(cancelled.status).toBe('failed');
     expect(cancelled.failure?.code).toBe('cancelled');
   });
 
   it('emits bounded progress and honors a node budget', () => {
     const progress: number[] = [];
-    const result = solveFill({
-      ...crossingRequest(),
-      maxNodes: 1
-    }, {
-      onProgress: (event) => progress.push(event.nodes)
-    });
+    const result = solveFill(
+      {
+        ...crossingRequest(),
+        maxNodes: 1,
+      },
+      {
+        onProgress: (event) => progress.push(event.nodes),
+      },
+    );
 
     expect(result.status).toBe('failed');
     expect(result.failure?.code).toBe('resource-limit');
@@ -206,7 +251,7 @@ describe('deterministic fill CSP', () => {
       signal: controller.signal,
       onProgress: (event) => {
         if (event.nodes === 1) controller.abort();
-      }
+      },
     });
 
     expect(result.status).toBe('failed');
@@ -222,7 +267,7 @@ describe('deterministic fill CSP', () => {
     const invalid = await solveFillAsync({
       slots: [],
       intersections: [],
-      candidates: [candidate('CAT', 1)]
+      candidates: [candidate('CAT', 1)],
     });
     expect(invalid.failure?.code).toBe('invalid-request');
   });

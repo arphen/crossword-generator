@@ -1,14 +1,19 @@
 import {
   parseConstructorWorkerResponse,
   type ConstructorWorkerRequest,
-  type ConstructorWorkerResponse,
   type FillProgress,
   type FillRequest,
-  type FillResult
+  type FillResult,
 } from '@crossword/construction';
 
 export interface ConstructorWorkerClient {
-  solve(request: FillRequest, options?: { signal?: AbortSignal; onProgress?: (progress: FillProgress) => void }): Promise<FillResult>;
+  solve(
+    request: FillRequest,
+    options?: {
+      signal?: AbortSignal;
+      onProgress?: (progress: FillProgress) => void;
+    },
+  ): Promise<FillResult>;
   cancel(jobId: string): void;
   dispose(): void;
 }
@@ -22,10 +27,17 @@ type PendingJob = {
 };
 
 function responseJobId(value: unknown): string | undefined {
-  return typeof value === 'object' && value !== null && 'jobId' in value && typeof value.jobId === 'string' ? value.jobId : undefined;
+  return typeof value === 'object' &&
+    value !== null &&
+    'jobId' in value &&
+    typeof value.jobId === 'string'
+    ? value.jobId
+    : undefined;
 }
 
-export function createConstructorWorkerClient(worker: Worker): ConstructorWorkerClient {
+export function createConstructorWorkerClient(
+  worker: Worker,
+): ConstructorWorkerClient {
   const pending = new Map<string, PendingJob>();
   let nextJobId = 1;
 
@@ -33,19 +45,24 @@ export function createConstructorWorkerClient(worker: Worker): ConstructorWorker
     const job = pending.get(jobId);
     if (!job) return;
     pending.delete(jobId);
-    if (job.signal && job.onAbort) job.signal.removeEventListener('abort', job.onAbort);
+    if (job.signal && job.onAbort)
+      job.signal.removeEventListener('abort', job.onAbort);
     action(job);
   };
 
   const rejectAll = (error: Error) => {
-    for (const jobId of pending.keys()) settle(jobId, (job) => job.reject(error));
+    for (const jobId of pending.keys())
+      settle(jobId, (job) => job.reject(error));
   };
 
   const handleMessage = (event: MessageEvent<unknown>) => {
     const message = parseConstructorWorkerResponse(event.data);
     if (!message) {
       const jobId = responseJobId(event.data);
-      if (jobId) settle(jobId, (job) => job.reject(new Error('Invalid constructor worker response')));
+      if (jobId)
+        settle(jobId, (job) =>
+          job.reject(new Error('Invalid constructor worker response')),
+        );
       else rejectAll(new Error('Invalid constructor worker response'));
       return;
     }
@@ -57,26 +74,42 @@ export function createConstructorWorkerClient(worker: Worker): ConstructorWorker
       settle(message.jobId, (job) => job.resolve(message.result));
       return;
     }
-    if (message.jobId) settle(message.jobId, (job) => job.reject(new Error(message.message)));
+    if (message.jobId)
+      settle(message.jobId, (job) => job.reject(new Error(message.message)));
     else rejectAll(new Error(message.message));
   };
 
-  const handleError = () => rejectAll(new Error('Constructor worker stopped unexpectedly'));
+  const handleError = () =>
+    rejectAll(new Error('Constructor worker stopped unexpectedly'));
   worker.addEventListener('message', handleMessage);
   worker.addEventListener('error', handleError);
 
   const sendCancel = (jobId: string) => {
     if (!pending.has(jobId)) return;
-    const message: ConstructorWorkerRequest = { version: 1, type: 'cancel', jobId };
+    const message: ConstructorWorkerRequest = {
+      version: 1,
+      type: 'cancel',
+      jobId,
+    };
     worker.postMessage(message);
   };
 
   return {
     solve(request, options = {}) {
       const jobId = `constructor-${nextJobId++}`;
-      const message: ConstructorWorkerRequest = { version: 1, type: 'solve', jobId, request };
+      const message: ConstructorWorkerRequest = {
+        version: 1,
+        type: 'solve',
+        jobId,
+        request,
+      };
       const promise = new Promise<FillResult>((resolve, reject) => {
-        const job: PendingJob = { resolve, reject, onProgress: options.onProgress, signal: options.signal };
+        const job: PendingJob = {
+          resolve,
+          reject,
+          onProgress: options.onProgress,
+          signal: options.signal,
+        };
         if (options.signal) {
           job.onAbort = () => sendCancel(jobId);
           options.signal.addEventListener('abort', job.onAbort, { once: true });
@@ -93,11 +126,14 @@ export function createConstructorWorkerClient(worker: Worker): ConstructorWorker
       worker.removeEventListener('error', handleError);
       rejectAll(new Error('Constructor worker client disposed'));
       worker.terminate();
-    }
+    },
   };
 }
 
 export function createBrowserConstructorWorker(): ConstructorWorkerClient {
-  const worker = new Worker(new URL('./constructorWorker.ts', import.meta.url), { type: 'module' });
+  const worker = new Worker(
+    new URL('./constructorWorker.ts', import.meta.url),
+    { type: 'module' },
+  );
   return createConstructorWorkerClient(worker);
 }

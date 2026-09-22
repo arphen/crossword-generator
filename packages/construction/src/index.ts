@@ -8,7 +8,13 @@ export type {
   FillRequest,
   FillResult,
   FillSlot,
-  FillSolution
+  FillSolution,
 } from './csp';
-export type { ConstructorWorkerRequest, ConstructorWorkerResponse } from './workerProtocol';
-export { parseConstructorWorkerRequest, parseConstructorWorkerResponse } from './workerProtocol';
+export type {
+  ConstructorWorkerRequest,
+  ConstructorWorkerResponse,
+} from './workerProtocol';
+export {
+  parseConstructorWorkerRequest,
+  parseConstructorWorkerResponse,
+} from './workerProtocol';

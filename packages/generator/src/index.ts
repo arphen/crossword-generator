@@ -1,5 +1,11 @@
-export { constructOriginalFill, generateCandidateBatches } from './constructionUseCases';
+export {
+  constructOriginalFill,
+  generateCandidateBatches,
+} from './constructionUseCases';
 export type {
-  ConstructionFailure, FillGrid, LexiconResolver,
-  OriginalConstructionRequest, OriginalConstructionResult
+  ConstructionFailure,
+  FillGrid,
+  LexiconResolver,
+  OriginalConstructionRequest,
+  OriginalConstructionResult,
 } from './constructionUseCases';

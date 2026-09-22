@@ -1,7 +1,20 @@
 export { createModelBroker } from './broker';
-export { createFakeLocalModelAdapter, type FakeLocalModelAdapter, type FakeLocalModelAdapterOptions } from './fakeAdapter';
-export { createWebLLMAdapter, type WebLlmAdapterOptions, type WebLlmEngine, type WebLlmEngineFactory, type WebLlmModuleLoader } from './webllmAdapter';
-export { parseModelWorkerRequest, parseModelWorkerResponse } from './workerProtocol';
+export {
+  createFakeLocalModelAdapter,
+  type FakeLocalModelAdapter,
+  type FakeLocalModelAdapterOptions,
+} from './fakeAdapter';
+export {
+  createWebLLMAdapter,
+  type WebLlmAdapterOptions,
+  type WebLlmEngine,
+  type WebLlmEngineFactory,
+  type WebLlmModuleLoader,
+} from './webllmAdapter';
+export {
+  parseModelWorkerRequest,
+  parseModelWorkerResponse,
+} from './workerProtocol';
 export type {
   BrokerResult,
   CandidateRequest,
@@ -14,6 +27,11 @@ export type {
   ModelManifest,
   ModelShard,
   ModelState,
-  RuntimeProbe
+  RuntimeProbe,
 } from './broker';
-export type { ModelWorkerConfig, ModelWorkerOperation, ModelWorkerRequest, ModelWorkerResponse } from './workerProtocol';
+export type {
+  ModelWorkerConfig,
+  ModelWorkerOperation,
+  ModelWorkerRequest,
+  ModelWorkerResponse,
+} from './workerProtocol';

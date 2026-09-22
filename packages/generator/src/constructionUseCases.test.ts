@@ -1,19 +1,31 @@
-import { solveFill, type FillCandidate, type FillRequest } from '@crossword/construction';
-import type { CandidateRequest, ModelBroker, CandidateSuggestion } from '@crossword/model-runtime';
+import {
+  solveFill,
+  type FillCandidate,
+  type FillRequest,
+} from '@crossword/construction';
+import type {
+  CandidateRequest,
+  ModelBroker,
+  CandidateSuggestion,
+} from '@crossword/model-runtime';
 import { describe, expect, it } from 'vitest';
-import { constructOriginalFill, generateCandidateBatches, type LexiconResolver } from './constructionUseCases';
+import {
+  constructOriginalFill,
+  generateCandidateBatches,
+  type LexiconResolver,
+} from './constructionUseCases';
 
 const modelRequest: CandidateRequest = {
   seed: 'fixture',
   audienceSummary: 'broad',
   requestedRoles: ['general'],
   excludedAnswers: [],
-  maxSuggestions: 4
+  maxSuggestions: 4,
 };
 
 const fillRequest: Omit<FillRequest, 'candidates'> = {
   slots: [{ id: 'slot', length: 3 }],
-  intersections: []
+  intersections: [],
 };
 
 const suggestion: CandidateSuggestion = {
@@ -21,30 +33,38 @@ const suggestion: CandidateSuggestion = {
   intendedSense: 'a small animal',
   associations: ['pet'],
   role: 'general',
-  confidence: 0.8
+  confidence: 0.8,
 };
 
 const candidate: FillCandidate = {
   word: 'CAT',
   score: 1,
   lexemeId: 'lexeme-cat',
-  sourceIds: ['fixture']
+  sourceIds: ['fixture'],
 };
 
 function brokerWith(output: unknown): ModelBroker {
   return {
     state: () => 'loaded',
-    probe: () => ({ webgpu: true, availableMemoryMb: 1, storageQuotaBytes: 1, storageUsageBytes: 0 }),
+    probe: () => ({
+      webgpu: true,
+      availableMemoryMb: 1,
+      storageQuotaBytes: 1,
+      storageUsageBytes: 0,
+    }),
     install: async () => ({ ok: true, value: undefined }),
     load: async () => ({ ok: true, value: undefined }),
-    generateCandidates: async () => ({ ok: true, value: output as readonly CandidateSuggestion[] }),
+    generateCandidates: async () => ({
+      ok: true,
+      value: output as readonly CandidateSuggestion[],
+    }),
     composeClues: async () => ({ ok: true, value: [] }),
-    unload: async () => ({ ok: true, value: undefined })
+    unload: async () => ({ ok: true, value: undefined }),
   };
 }
 
 const resolver: LexiconResolver = {
-  resolve: (value) => value.surface === 'CAT' ? candidate : undefined
+  resolve: (value) => (value.surface === 'CAT' ? candidate : undefined),
 };
 
 describe('original construction use case', () => {
@@ -56,24 +76,36 @@ describe('original construction use case', () => {
         requests.push(request);
         return {
           ok: true,
-          value: [{
-            ...suggestion,
-            surface: requests.length === 1 ? 'CAT' : 'DOG'
-          }]
+          value: [
+            {
+              ...suggestion,
+              surface: requests.length === 1 ? 'CAT' : 'DOG',
+            },
+          ],
         };
-      }
+      },
     };
 
-    const result = await generateCandidateBatches(broker, {
-      ...modelRequest,
-      focus: 'long answers about coastal ecology',
-      targetLengths: [10, 11, 12, 13, 14, 15]
-    }, 2);
+    const result = await generateCandidateBatches(
+      broker,
+      {
+        ...modelRequest,
+        focus: 'long answers about coastal ecology',
+        targetLengths: [10, 11, 12, 13, 14, 15],
+      },
+      2,
+    );
 
     expect(result.ok).toBe(true);
-    expect(requests.map((request) => request.seed)).toEqual(['fixture:batch-1', 'fixture:batch-2']);
+    expect(requests.map((request) => request.seed)).toEqual([
+      'fixture:batch-1',
+      'fixture:batch-2',
+    ]);
     expect(requests[1]?.excludedAnswers).toContain('CAT');
-    expect(result.ok && result.value.map((value) => value.surface)).toEqual(['CAT', 'DOG']);
+    expect(result.ok && result.value.map((value) => value.surface)).toEqual([
+      'CAT',
+      'DOG',
+    ]);
   });
 
   it('rejects an unbounded batch request before calling the model', async () => {
@@ -83,7 +115,7 @@ describe('original construction use case', () => {
       generateCandidates: async () => {
         calls.push('generate');
         return { ok: true, value: [] };
-      }
+      },
     };
 
     const result = await generateCandidateBatches(broker, modelRequest, 9);
@@ -92,8 +124,8 @@ describe('original construction use case', () => {
       ok: false,
       error: {
         code: 'invalid-model-output',
-        message: 'Candidate batch count must be an integer from 1 to 8'
-      }
+        message: 'Candidate batch count must be an integer from 1 to 8',
+      },
     });
     expect(calls).toEqual([]);
   });
@@ -103,7 +135,7 @@ describe('original construction use case', () => {
       brokerWith([suggestion]),
       resolver,
       { solve: (request, options) => solveFill(request, options) },
-      { model: modelRequest, fill: fillRequest }
+      { model: modelRequest, fill: fillRequest },
     );
 
     expect(result.ok).toBe(true);
@@ -118,7 +150,7 @@ describe('original construction use case', () => {
       brokerWith([{ ...suggestion, surface: 'UNKNOWN' }]),
       resolver,
       { solve: (request, options) => solveFill(request, options) },
-      { model: modelRequest, fill: fillRequest }
+      { model: modelRequest, fill: fillRequest },
     );
 
     expect(result).toEqual({
@@ -126,8 +158,9 @@ describe('original construction use case', () => {
       error: {
         stage: 'lexicon',
         code: 'no-eligible-candidates',
-        message: 'The local model produced no candidates accepted by the licensed lexicon'
-      }
+        message:
+          'The local model produced no candidates accepted by the licensed lexicon',
+      },
     });
   });
 
@@ -135,18 +168,33 @@ describe('original construction use case', () => {
     const calls: string[] = [];
     const broker: ModelBroker = {
       ...brokerWith([]),
-      generateCandidates: async () => ({ ok: false, error: { code: 'model-not-enabled', message: 'Install the local model' } })
+      generateCandidates: async () => ({
+        ok: false,
+        error: {
+          code: 'model-not-enabled',
+          message: 'Install the local model',
+        },
+      }),
     };
 
     const result = await constructOriginalFill(
       broker,
       resolver,
-      { solve: () => { calls.push('solve'); return solveFill({ ...fillRequest, candidates: [candidate] }); } },
-      { model: modelRequest, fill: fillRequest }
+      {
+        solve: () => {
+          calls.push('solve');
+          return solveFill({ ...fillRequest, candidates: [candidate] });
+        },
+      },
+      { model: modelRequest, fill: fillRequest },
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatchObject({ stage: 'model', code: 'model-not-enabled' });
+    if (!result.ok)
+      expect(result.error).toMatchObject({
+        stage: 'model',
+        code: 'model-not-enabled',
+      });
     expect(calls).toEqual([]);
   });
 });

@@ -2,12 +2,17 @@ import type {
   CandidateRequest,
   CandidateSuggestion,
   ClueDraft,
-  LocalModelAdapter
+  LocalModelAdapter,
 } from './broker';
 
-export type FakeLocalModelAdapter = LocalModelAdapter & Readonly<{
-  calls: Readonly<{ install: () => number; load: () => number; unload: () => number }>;
-}>;
+export type FakeLocalModelAdapter = LocalModelAdapter &
+  Readonly<{
+    calls: Readonly<{
+      install: () => number;
+      load: () => number;
+      unload: () => number;
+    }>;
+  }>;
 
 export type FakeLocalModelAdapterOptions = Readonly<{
   suggestions?: readonly CandidateSuggestion[];
@@ -19,7 +24,9 @@ export type FakeLocalModelAdapterOptions = Readonly<{
  * no randomness. Mirrors the real adapter contract, including the
  * "not loaded" guard after unload.
  */
-export function createFakeLocalModelAdapter(output: FakeLocalModelAdapterOptions = {}): FakeLocalModelAdapter {
+export function createFakeLocalModelAdapter(
+  output: FakeLocalModelAdapterOptions = {},
+): FakeLocalModelAdapter {
   const counters = { install: 0, load: 0, unload: 0 };
   let unloaded = false;
 
@@ -31,7 +38,7 @@ export function createFakeLocalModelAdapter(output: FakeLocalModelAdapterOptions
     calls: {
       install: () => counters.install,
       load: () => counters.load,
-      unload: () => counters.unload
+      unload: () => counters.unload,
     },
     async install() {
       counters.install += 1;
@@ -44,23 +51,32 @@ export function createFakeLocalModelAdapter(output: FakeLocalModelAdapterOptions
       requireLoaded();
       if (output.suggestions) return [...output.suggestions];
       const role = request.requestedRoles[0] ?? 'general';
-      return Array.from({ length: Math.min(request.maxSuggestions, 3) }, (_, index) => ({
-        surface: `FAKEWORD${index + 1}`,
-        intendedSense: 'fixture sense',
-        associations: [],
-        role,
-        confidence: 0.5
-      }));
+      return Array.from(
+        { length: Math.min(request.maxSuggestions, 3) },
+        (_, index) => ({
+          surface: `FAKEWORD${index + 1}`,
+          intendedSense: 'fixture sense',
+          associations: [],
+          role,
+          confidence: 0.5,
+        }),
+      );
     },
     async composeClues(request) {
       requireLoaded();
       return output.clueDrafts
         ? [...output.clueDrafts]
-        : [{ mechanism: 'direct', text: `Plain clue for ${request.answer}`, difficulty: 0.1 }];
+        : [
+            {
+              mechanism: 'direct',
+              text: `Plain clue for ${request.answer}`,
+              difficulty: 0.1,
+            },
+          ];
     },
     async unload() {
       counters.unload += 1;
       unloaded = true;
-    }
+    },
   };
 }

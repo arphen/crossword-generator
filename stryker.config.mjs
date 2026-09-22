@@ -4,28 +4,28 @@ export default {
   mutate: ['packages/construction/src/csp.ts'],
   vitest: {
     dir: 'packages/construction',
-    related: true
+    related: true,
   },
   reporters: ['clear-text', 'progress', 'html', 'json'],
   disableTypeChecks: false,
   ignorePatterns: [
-    '.venv',
     'node_modules',
-    'apps/web/dist',
+    'artifacts',
+    'coverage',
     'reports',
-    'src/crossword/static/lib'
+    '.stryker-tmp',
   ],
   htmlReporter: {
-    fileName: 'reports/mutation/index.html'
+    fileName: 'reports/mutation/index.html',
   },
   jsonReporter: {
-    fileName: 'reports/mutation/report.json'
+    fileName: 'reports/mutation/report.json',
   },
   thresholds: {
     high: 80,
-    low: 70,
-    break: 0
+    low: 55,
+    break: 55,
   },
   tempDirName: '.stryker-tmp',
-  cleanTempDir: true
+  cleanTempDir: true,
 };
