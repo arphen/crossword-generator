@@ -102,4 +102,32 @@ describe('model worker client', () => {
     await expect(promise).rejects.toThrow('stopped unexpectedly');
     client.dispose();
   });
+
+  it('delivers lifecycle progress to the operation observer', async () => {
+    const worker = new FakeWorker();
+    const client = createModelWorkerClient(worker as unknown as Worker);
+    const progress: number[] = [];
+    const promise = client.load(undefined, (event) =>
+      progress.push(event.progress ?? -1),
+    );
+    const request = worker.posted[0];
+    if (!request || request.type !== 'execute')
+      throw new Error('Expected execute request');
+    worker.emit({
+      version: 1,
+      type: 'progress',
+      requestId: request.requestId,
+      progress: { operation: 'load', progress: 0.25, text: 'loading' },
+    });
+    worker.emit({
+      version: 1,
+      type: 'result',
+      requestId: request.requestId,
+      operation: 'load',
+      result: { ok: true, value: undefined },
+    });
+    await promise;
+    expect(progress).toEqual([0.25]);
+    client.dispose();
+  });
 });

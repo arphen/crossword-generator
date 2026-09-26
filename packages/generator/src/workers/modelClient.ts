@@ -5,6 +5,7 @@ import {
   type CandidateSuggestion,
   type ClueDraft,
   type ModelManifest,
+  type ModelProgress,
   type ModelState,
   type ModelWorkerConfig,
   type ModelWorkerOperation,
@@ -14,15 +15,23 @@ import {
 
 export interface ModelWorkerClient {
   configure(config: ModelWorkerConfig): Promise<BrokerResult<void>>;
-  install(signal?: AbortSignal): Promise<BrokerResult<void>>;
-  load(signal?: AbortSignal): Promise<BrokerResult<void>>;
+  install(
+    signal?: AbortSignal,
+    onProgress?: (progress: ModelProgress) => void,
+  ): Promise<BrokerResult<void>>;
+  load(
+    signal?: AbortSignal,
+    onProgress?: (progress: ModelProgress) => void,
+  ): Promise<BrokerResult<void>>;
   generateCandidates(
     request: CandidateRequest,
     signal?: AbortSignal,
+    onProgress?: (progress: ModelProgress) => void,
   ): Promise<BrokerResult<readonly CandidateSuggestion[]>>;
   composeClues(
     request: Readonly<{ answer: string; intendedSense: string }>,
     signal?: AbortSignal,
+    onProgress?: (progress: ModelProgress) => void,
   ): Promise<BrokerResult<readonly ClueDraft[]>>;
   unload(signal?: AbortSignal): Promise<BrokerResult<void>>;
   state(): ModelState;
@@ -35,6 +44,7 @@ type PendingJob = {
   reject: (error: Error) => void;
   signal?: AbortSignal;
   onAbort?: () => void;
+  onProgress?: (progress: ModelProgress) => void;
 };
 
 function responseRequestId(value: unknown): string | undefined {
@@ -80,6 +90,10 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
       currentState = message.state;
       return;
     }
+    if (message.type === 'progress') {
+      pending.get(message.requestId)?.onProgress?.(message.progress);
+      return;
+    }
     if (message.type === 'result') {
       settle(message.requestId, (job) => job.resolve(message.result));
       return;
@@ -113,10 +127,11 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
       | Readonly<{ answer: string; intendedSense: string }>
       | undefined,
     signal?: AbortSignal,
+    onProgress?: (progress: ModelProgress) => void,
   ): Promise<BrokerResult<T>> => {
     const requestId = `model-${nextRequestId++}`;
     const promise = new Promise<BrokerResult<unknown>>((resolve, reject) => {
-      const job: PendingJob = { resolve, reject, signal };
+      const job: PendingJob = { resolve, reject, signal, onProgress };
       if (signal) {
         job.onAbort = () => sendCancel(requestId);
         signal.addEventListener('abort', job.onAbort, { once: true });
@@ -143,16 +158,19 @@ export function createModelWorkerClient(worker: Worker): ModelWorkerClient {
       worker.postMessage({ version: 1, type: 'configure', requestId, config });
       return promise as Promise<BrokerResult<void>>;
     },
-    install: (signal) => run<void>('install', undefined, signal),
-    load: (signal) => run<void>('load', undefined, signal),
-    generateCandidates: (request, signal) =>
+    install: (signal, onProgress) =>
+      run<void>('install', undefined, signal, onProgress),
+    load: (signal, onProgress) =>
+      run<void>('load', undefined, signal, onProgress),
+    generateCandidates: (request, signal, onProgress) =>
       run<readonly CandidateSuggestion[]>(
         'generate-candidates',
         request,
         signal,
+        onProgress,
       ),
-    composeClues: (request, signal) =>
-      run<readonly ClueDraft[]>('compose-clues', request, signal),
+    composeClues: (request, signal, onProgress) =>
+      run<readonly ClueDraft[]>('compose-clues', request, signal, onProgress),
     unload: (signal) => run<void>('unload', undefined, signal),
     state: () => currentState,
     cancel: sendCancel,

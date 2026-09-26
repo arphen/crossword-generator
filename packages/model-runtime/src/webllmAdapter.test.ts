@@ -3,6 +3,7 @@ import type { ModelManifest } from './broker';
 import {
   createWebLLMAdapter,
   type WebLlmEngine,
+  type WebLlmEngineFactory,
   type WebLlmModule,
 } from './webllmAdapter';
 
@@ -182,5 +183,23 @@ describe('in-browser WebLLM adapter', () => {
     ).resolves.toEqual([
       { mechanism: 'standard', text: 'A watery expanse', difficulty: 0.4 },
     ]);
+  });
+
+  it('forwards WebLLM engine initialization progress', async () => {
+    const engine = fakeEngine('[]');
+    const progress: number[] = [];
+    const createEngine: WebLlmEngineFactory = async (_modelId, onProgress) => {
+      onProgress(0.35, 'loading fixture weights');
+      return engine;
+    };
+    const adapter = createWebLLMAdapter({
+      loadModule: async () => fakeModule(engine, async () => engine),
+      createEngine,
+    });
+
+    await adapter.install(manifest, undefined, (event) =>
+      progress.push(event.progress ?? -1),
+    );
+    expect(progress).toEqual([0.35]);
   });
 });

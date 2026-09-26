@@ -37,6 +37,54 @@ is current.
 Agent-facing repository conventions are in [AGENTS.md](AGENTS.md), and the
 bounded navigation index is [docs/REPO_MAP.md](docs/REPO_MAP.md).
 
+The next development slice is a step-by-step generator lab. Luna's executable
+plan is in [docs/plans/LUNA_GENERATION_LAB.md](docs/plans/LUNA_GENERATION_LAB.md).
+
+## 15×15 construction studio
+
+The lab now opens on a complete 15×15 example and builds new full-size grids
+with the vendored MIT-licensed `xfill` Rust engine and Crossword Nexus scored
+word list. The older 3×3 runner is retained as test/development code, not the
+normal UI. The lab is not part of the three npm package archives.
+
+Requires Node/npm and Rust/Cargo. Start the local server (the engine builds on
+the first generation request):
+
+```sh
+npm run lab:dev
+```
+
+Open the printed **http://localhost:.../** URL, not `apps/lab/index.html` as
+`file://`. The latter is only Vite source and displays a setup message. The
+bundled example is viewable without Cargo or Ollama, while **Generate new
+15×15** needs Cargo. The generation controls set the seed, number of candidate
+grids, minimum mean word-list score, minimum per-entry score, and maximum number
+of low-scored entries. The per-entry floor is the strongest quality lever: 60
+is responsive for exploration; 70 can require hundreds of candidate grids.
+When a search finds no qualifying fill, the previous complete puzzle stays in
+place.
+Optional theme answers use the engine's themed generator and may need more
+candidates or relaxed quality gates.
+
+For AI theme ideas and clue comparison, start Ollama and install one or more
+models. The lab lists installed models automatically; ask the selected model
+for a theme set, review/edit the three suggested answers, then generate a
+themed grid. You can also select any combination of models, click an entry,
+and compare clue drafts. A model is never needed for a themeless grid fill.
+Drafts must be checked and edited before use. The **Export grid + clues** button saves
+the numbered entries, fill, provenance, draft texts, and final clue edits as
+JSON. No puzzle or prompt is uploaded to an external service by this workflow.
+
+```sh
+npm run lab:test
+npm run lab:build
+```
+
+The integration plan and remaining editorial work are in
+[docs/plans/FULL_SIZE_CONSTRUCTION.md](docs/plans/FULL_SIZE_CONSTRUCTION.md).
+The earlier mini-lab report remains in [docs/LAB_REPORT.md](docs/LAB_REPORT.md)
+as historical development evidence.
+
 ## Integrate into the browser app
 
 Copy the three `artifacts/*.tgz` archives into the crossword repo's `vendor/generator/`. That repo uses locked `file:` dependencies so a clean frontend checkout does not need this sibling directory. Update the package versions, file dependency paths and frontend lockfile for subsequent releases; do not silently overwrite released archive versions.

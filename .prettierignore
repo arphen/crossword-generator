@@ -5,3 +5,4 @@ reports/
 .stryker-tmp/
 docs/REPO_MAP.md
 package-lock.json
+vendor/xfill/

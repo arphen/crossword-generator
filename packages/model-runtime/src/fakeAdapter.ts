@@ -16,7 +16,11 @@ export type FakeLocalModelAdapter = LocalModelAdapter &
 
 export type FakeLocalModelAdapterOptions = Readonly<{
   suggestions?: readonly CandidateSuggestion[];
-  clueDrafts?: readonly ClueDraft[];
+  clueDrafts?:
+    | readonly ClueDraft[]
+    | ((
+        request: Readonly<{ answer: string; intendedSense: string }>,
+      ) => readonly ClueDraft[]);
 }>;
 
 /**
@@ -49,7 +53,17 @@ export function createFakeLocalModelAdapter(
     },
     async generateCandidates(request: CandidateRequest) {
       requireLoaded();
-      if (output.suggestions) return [...output.suggestions];
+      if (output.suggestions)
+        return output.suggestions
+          .filter(
+            (item) =>
+              !request.excludedAnswers.some(
+                (excluded) =>
+                  excluded.trim().toUpperCase() ===
+                  item.surface.trim().toUpperCase(),
+              ),
+          )
+          .slice(0, request.maxSuggestions);
       const role = request.requestedRoles[0] ?? 'general';
       return Array.from(
         { length: Math.min(request.maxSuggestions, 3) },
@@ -64,8 +78,12 @@ export function createFakeLocalModelAdapter(
     },
     async composeClues(request) {
       requireLoaded();
-      return output.clueDrafts
-        ? [...output.clueDrafts]
+      const clueDrafts =
+        typeof output.clueDrafts === 'function'
+          ? output.clueDrafts(request)
+          : output.clueDrafts;
+      return clueDrafts
+        ? [...clueDrafts]
         : [
             {
               mechanism: 'direct',

@@ -110,4 +110,31 @@ describe('model worker protocol', () => {
       }),
     ).toBeUndefined();
   });
+
+  it('accepts indeterminate and determinate progress events', () => {
+    expect(
+      parseModelWorkerResponse({
+        version: 1,
+        type: 'progress',
+        requestId: 'load-1',
+        progress: { operation: 'load', text: 'initializing' },
+      }),
+    ).toMatchObject({ type: 'progress', requestId: 'load-1' });
+    expect(
+      parseModelWorkerResponse({
+        version: 1,
+        type: 'progress',
+        requestId: 'load-1',
+        progress: { operation: 'load', progress: 0.4, text: 'downloading' },
+      }),
+    ).toMatchObject({ type: 'progress', progress: { progress: 0.4 } });
+    expect(
+      parseModelWorkerResponse({
+        version: 1,
+        type: 'progress',
+        requestId: 'load-1',
+        progress: { operation: 'load', progress: 1.4 },
+      }),
+    ).toBeUndefined();
+  });
 });

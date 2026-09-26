@@ -3,6 +3,7 @@ export {
   generateCandidateBatches,
 } from './constructionUseCases';
 export type {
+  CandidateBatchObservation,
   ConstructionFailure,
   FillGrid,
   LexiconResolver,

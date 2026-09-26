@@ -121,4 +121,37 @@ describe('mandatory local model broker', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe('invalid-model-output');
   });
+
+  it('forwards validated lifecycle progress without changing the broker result', async () => {
+    const progress: number[] = [];
+    const broker = createModelBroker(
+      manifest,
+      {
+        ...adapter([]),
+        install: async (_manifest, _signal, onProgress) => {
+          onProgress?.({ operation: 'install', progress: 0.5, text: 'half' });
+        },
+        load: async (_manifest, _signal, onProgress) => {
+          onProgress?.({ operation: 'load', progress: 1, text: 'ready' });
+        },
+      },
+      runtime,
+    );
+
+    expect(
+      (
+        await broker.install(undefined, (event) =>
+          progress.push(event.progress ?? -1),
+        )
+      ).ok,
+    ).toBe(true);
+    expect(
+      (
+        await broker.load(undefined, (event) =>
+          progress.push(event.progress ?? -1),
+        )
+      ).ok,
+    ).toBe(true);
+    expect(progress).toEqual([-1, 0.5, -1, 1]);
+  });
 });

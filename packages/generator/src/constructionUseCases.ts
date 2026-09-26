@@ -30,6 +30,12 @@ export type OriginalConstructionRequest = Readonly<{
   candidateBatches?: number;
 }>;
 
+export type CandidateBatchObservation = Readonly<{
+  batch: number;
+  request: CandidateRequest;
+  result: BrokerResult<readonly CandidateSuggestion[]>;
+}>;
+
 export type ConstructionFailure = Readonly<{
   stage: 'model' | 'lexicon' | 'fill';
   code:
@@ -61,6 +67,7 @@ export async function generateCandidateBatches(
   request: CandidateRequest,
   requestedBatches = 1,
   signal?: AbortSignal,
+  onBatch?: (observation: CandidateBatchObservation) => void,
 ): Promise<BrokerResult<readonly CandidateSuggestion[]>> {
   const count = batchCount(requestedBatches);
   if (count === undefined)
@@ -75,14 +82,13 @@ export async function generateCandidateBatches(
   const suggestions: CandidateSuggestion[] = [];
   const excludedAnswers = [...request.excludedAnswers];
   for (let batch = 0; batch < count; batch += 1) {
-    const generated = await broker.generateCandidates(
-      {
-        ...request,
-        seed: `${request.seed}:batch-${batch + 1}`,
-        excludedAnswers,
-      },
-      signal,
-    );
+    const batchRequest = {
+      ...request,
+      seed: `${request.seed}:batch-${batch + 1}`,
+      excludedAnswers: [...excludedAnswers],
+    };
+    const generated = await broker.generateCandidates(batchRequest, signal);
+    onBatch?.({ batch: batch + 1, request: batchRequest, result: generated });
     if (!generated.ok) return generated;
     suggestions.push(...generated.value);
     excludedAnswers.push(

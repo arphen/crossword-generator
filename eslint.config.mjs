@@ -19,6 +19,7 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       'artifacts/**',
+      '**/dist/**',
       'coverage/**',
       'reports/**',
       '.stryker-tmp/**',
@@ -33,10 +34,10 @@ export default tseslint.config(
   },
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ['packages/**/*.ts'],
+    files: ['packages/**/*.ts', 'apps/lab/src/**/*.{ts,tsx}'],
   })),
   {
-    files: ['packages/**/*.ts'],
+    files: ['packages/**/*.ts', 'apps/lab/src/**/*.{ts,tsx}'],
     languageOptions: {
       globals: {
         ...globals.browser,

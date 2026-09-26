@@ -2,6 +2,7 @@ import type {
   BrokerResult,
   CandidateRequest,
   ModelManifest,
+  ModelProgress,
   ModelState,
   RuntimeProbe,
 } from './broker';
@@ -42,6 +43,12 @@ export type ModelWorkerRequest = Readonly<
 
 export type ModelWorkerResponse = Readonly<
   | { version: 1; type: 'state'; state: ModelState }
+  | {
+      version: 1;
+      type: 'progress';
+      requestId: string;
+      progress: ModelProgress;
+    }
   | {
       version: 1;
       type: 'result';
@@ -216,6 +223,27 @@ function isBrokerResult(value: unknown): value is BrokerResult<unknown> {
   );
 }
 
+function isModelProgress(value: unknown): value is ModelProgress {
+  if (!isRecord(value) || typeof value.operation !== 'string') return false;
+  if (
+    ![
+      'install',
+      'load',
+      'generate-candidates',
+      'compose-clues',
+      'unload',
+    ].includes(value.operation)
+  )
+    return false;
+  return (
+    (value.progress === undefined ||
+      (isFiniteNumber(value.progress) &&
+        value.progress >= 0 &&
+        value.progress <= 1)) &&
+    (value.text === undefined || typeof value.text === 'string')
+  );
+}
+
 export function parseModelWorkerResponse(
   value: unknown,
 ): ModelWorkerResponse | undefined {
@@ -223,6 +251,18 @@ export function parseModelWorkerResponse(
     return undefined;
   if (value.type === 'state' && modelStates.includes(value.state as ModelState))
     return { version: 1, type: 'state', state: value.state as ModelState };
+  if (
+    value.type === 'progress' &&
+    typeof value.requestId === 'string' &&
+    value.requestId &&
+    isModelProgress(value.progress)
+  )
+    return {
+      version: 1,
+      type: 'progress',
+      requestId: value.requestId,
+      progress: value.progress,
+    };
   if (
     value.type === 'protocol-error' &&
     typeof value.message === 'string' &&

@@ -9,7 +9,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / 'docs/REPO_MAP.md'
-TREES = ('packages', 'tests', 'scripts', '.scripts', '.githooks', 'docs', '.github')
+TREES = ('apps', 'packages', 'tests', 'scripts', '.scripts', '.githooks', 'docs', '.github')
 EXCLUDED_DIRS = set(
     '''
 .git node_modules artifacts coverage reports .stryker-tmp dist build target
@@ -105,6 +105,8 @@ def render() -> str:
         '- `packages/construction/`: deterministic fill engine and worker protocol.',
         '- `packages/model-runtime/`: local model broker, adapters, and protocol.',
         '- `packages/generator/`: use cases and browser worker clients.',
+        '- `apps/lab/`: private 15×15 Vite/React construction lab and local API.',
+        '- `vendor/xfill/`: pinned MIT Rust fill engine and scored word list (not indexed).',
         '- `docs/`: integration and development documentation.',
         '- `.scripts/`: dependency-free repository-map tooling.',
         '- `.githooks/`: map-maintenance and freshness hooks.', '',

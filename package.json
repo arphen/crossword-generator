@@ -9,7 +9,8 @@
     "npm": "11.x"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "test": "npm run test --workspaces",
@@ -20,19 +21,22 @@
     "format:check": "prettier --check .",
     "map:check": "bash .scripts/generate-repo-map.sh --check",
     "test:coverage": "vitest run --config vitest.ci.config.mjs --coverage",
-    "pack:packages": "mkdir -p artifacts && npm pack --workspaces --pack-destination artifacts",
+    "lab:dev": "npm run dev --workspace=@crossword/lab",
+    "lab:build": "npm run build --workspace=@crossword/lab",
+    "lab:test": "npm run test --workspace=@crossword/lab",
+    "pack:packages": "mkdir -p artifacts && npm pack --workspace=@crossword/construction --workspace=@crossword/model-runtime --workspace=@crossword/generator --pack-destination artifacts",
     "test:mutation": "stryker run"
   },
   "devDependencies": {
     "@eslint/js": "9.36.0",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
-    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "9.36.0",
     "globals": "16.4.0",
     "prettier": "3.6.2",
     "typescript": "5.9.2",
     "typescript-eslint": "8.44.1",
-    "vitest": "3.2.4"
+    "vitest": "^4.1.11"
   }
 }

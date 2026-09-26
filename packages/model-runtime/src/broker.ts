@@ -55,6 +55,18 @@ export type ModelState =
   | 'loaded'
   | 'generating'
   | 'unloading';
+export type ModelOperation =
+  | 'install'
+  | 'load'
+  | 'generate-candidates'
+  | 'compose-clues'
+  | 'unload';
+export type ModelProgress = Readonly<{
+  operation: ModelOperation;
+  progress?: number;
+  text?: string;
+}>;
+export type ModelProgressHandler = (progress: ModelProgress) => void;
 export type ModelFailureCode =
   | 'unsupported-device'
   | 'storage-quota'
@@ -68,8 +80,16 @@ export type BrokerResult<T> = Readonly<
 >;
 
 export type LocalModelAdapter = Readonly<{
-  install: (manifest: ModelManifest, signal?: AbortSignal) => Promise<void>;
-  load: (manifest: ModelManifest, signal?: AbortSignal) => Promise<void>;
+  install: (
+    manifest: ModelManifest,
+    signal?: AbortSignal,
+    onProgress?: ModelProgressHandler,
+  ) => Promise<void>;
+  load: (
+    manifest: ModelManifest,
+    signal?: AbortSignal,
+    onProgress?: ModelProgressHandler,
+  ) => Promise<void>;
   generateCandidates: (
     request: CandidateRequest,
     signal?: AbortSignal,
@@ -84,8 +104,14 @@ export type LocalModelAdapter = Readonly<{
 export type ModelBroker = Readonly<{
   state: () => ModelState;
   probe: () => RuntimeProbe;
-  install: (signal?: AbortSignal) => Promise<BrokerResult<void>>;
-  load: (signal?: AbortSignal) => Promise<BrokerResult<void>>;
+  install: (
+    signal?: AbortSignal,
+    onProgress?: ModelProgressHandler,
+  ) => Promise<BrokerResult<void>>;
+  load: (
+    signal?: AbortSignal,
+    onProgress?: ModelProgressHandler,
+  ) => Promise<BrokerResult<void>>;
   generateCandidates: (
     request: CandidateRequest,
     signal?: AbortSignal,
@@ -238,18 +264,19 @@ export function createModelBroker(
   return {
     state: () => currentState,
     probe: () => runtime,
-    async install(signal) {
+    async install(signal, onProgress) {
       const capability = canInstall();
       if (!capability.ok) return capability;
       if (isCancelled(signal))
         return failure('cancelled', 'Model installation cancelled');
-      await adapter.install(manifest, signal);
+      onProgress?.({ operation: 'install', text: 'Installing pinned model' });
+      await adapter.install(manifest, signal, onProgress);
       if (isCancelled(signal))
         return failure('cancelled', 'Model installation cancelled');
       currentState = 'installed';
       return success(undefined);
     },
-    async load(signal) {
+    async load(signal, onProgress) {
       if (currentState === 'uninstalled')
         return failure(
           'model-not-enabled',
@@ -260,7 +287,8 @@ export function createModelBroker(
       if (currentState === 'loaded') return success(undefined);
       if (isCancelled(signal))
         return failure('cancelled', 'Model loading cancelled');
-      await adapter.load(manifest, signal);
+      onProgress?.({ operation: 'load', text: 'Loading pinned model' });
+      await adapter.load(manifest, signal, onProgress);
       if (isCancelled(signal))
         return failure('cancelled', 'Model loading cancelled');
       currentState = 'loaded';

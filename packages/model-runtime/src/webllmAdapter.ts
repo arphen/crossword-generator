@@ -4,6 +4,7 @@ import type {
   CandidateSuggestion,
   LocalModelAdapter,
   ModelManifest,
+  ModelProgressHandler,
 } from './broker';
 
 export type WebLlmModule = typeof import('@mlc-ai/web-llm');
@@ -276,7 +277,11 @@ export function createWebLLMAdapter(
   }
 
   return {
-    async install(manifest: ModelManifest, signal) {
+    async install(
+      manifest: ModelManifest,
+      signal,
+      onProgress?: ModelProgressHandler,
+    ) {
       throwIfAborted(signal);
       const module = await loadModule();
       const known = module.prebuiltAppConfig.model_list.some(
@@ -286,11 +291,20 @@ export function createWebLLMAdapter(
         throw new Error(
           `Pinned model ${manifest.id} is not in the WebLLM prebuilt catalog`,
         );
-      engine = await createEngine(manifest.id, () => undefined);
+      engine = await createEngine(manifest.id, (progress, text) =>
+        onProgress?.({ operation: 'install', progress, text }),
+      );
     },
-    async load(manifest: ModelManifest, signal) {
+    async load(
+      manifest: ModelManifest,
+      signal,
+      onProgress?: ModelProgressHandler,
+    ) {
       throwIfAborted(signal);
-      if (!engine) engine = await createEngine(manifest.id, () => undefined);
+      if (!engine)
+        engine = await createEngine(manifest.id, (progress, text) =>
+          onProgress?.({ operation: 'load', progress, text }),
+        );
     },
     async generateCandidates(request: CandidateRequest, signal) {
       const text = await complete(candidatePrompt(request), 2048, signal);

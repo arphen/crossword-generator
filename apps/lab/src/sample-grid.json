@@ -1,0 +1,785 @@
+{
+  "id": 0,
+  "blocks": 38,
+  "themed": false,
+  "mean_score": 84.97,
+  "min_score": 70,
+  "iffy": 0,
+  "weak": 0,
+  "template": [
+    "....#....##....",
+    "....#.....#....",
+    "..........#....",
+    "...#....#.....#",
+    "...#....#.....#",
+    "##.....#......#",
+    "......#...#....",
+    ".....#...#.....",
+    "....#...#......",
+    "#......#.....##",
+    "#.....#....#...",
+    "#.....#....#...",
+    "....#..........",
+    "....#.....#....",
+    "....##....#...."
+  ],
+  "fill": [
+    "AGED#BASS##FAVA",
+    "IRAN#ESTEE#ELAL",
+    "SESAMESEED#MOLE",
+    "LET#AFEW#IRATE#",
+    "EKE#SITS#TALON#",
+    "##RISES#POTENT#",
+    "CORNER#MAR#NOIR",
+    "ABETS#SAT#DUNNO",
+    "BABE#TOT#GIDEON",
+    "#MERSEY#SAVES##",
+    "#ALPHA#MERE#PDF",
+    "#CLUES#ARCS#LOL",
+    "LAIN#ELLIOTPAGE",
+    "CROC#TITAN#ITME",
+    "DENT##PALS#TEAT"
+  ],
+  "entries": [
+    {
+      "num": 1,
+      "dir": "A",
+      "row": 0,
+      "col": 0,
+      "len": 4,
+      "answer": "AGED",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 1,
+      "dir": "D",
+      "row": 0,
+      "col": 0,
+      "len": 5,
+      "answer": "AISLE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 2,
+      "dir": "D",
+      "row": 0,
+      "col": 1,
+      "len": 5,
+      "answer": "GREEK",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 3,
+      "dir": "D",
+      "row": 0,
+      "col": 2,
+      "len": 15,
+      "answer": "EASTERREBELLION",
+      "score": 75,
+      "theme": false
+    },
+    {
+      "num": 4,
+      "dir": "D",
+      "row": 0,
+      "col": 3,
+      "len": 3,
+      "answer": "DNA",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 5,
+      "dir": "A",
+      "row": 0,
+      "col": 5,
+      "len": 4,
+      "answer": "BASS",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 5,
+      "dir": "D",
+      "row": 0,
+      "col": 5,
+      "len": 7,
+      "answer": "BEEFIER",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 6,
+      "dir": "D",
+      "row": 0,
+      "col": 6,
+      "len": 6,
+      "answer": "ASSETS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 7,
+      "dir": "D",
+      "row": 0,
+      "col": 7,
+      "len": 5,
+      "answer": "STEWS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 8,
+      "dir": "D",
+      "row": 0,
+      "col": 8,
+      "len": 3,
+      "answer": "SEE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 9,
+      "dir": "A",
+      "row": 0,
+      "col": 11,
+      "len": 4,
+      "answer": "FAVA",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 9,
+      "dir": "D",
+      "row": 0,
+      "col": 11,
+      "len": 10,
+      "answer": "FEMALENUDE",
+      "score": 75,
+      "theme": false
+    },
+    {
+      "num": 10,
+      "dir": "D",
+      "row": 0,
+      "col": 12,
+      "len": 15,
+      "answer": "ALOTONONESPLATE",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 11,
+      "dir": "D",
+      "row": 0,
+      "col": 13,
+      "len": 9,
+      "answer": "VALENTINO",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 12,
+      "dir": "D",
+      "row": 0,
+      "col": 14,
+      "len": 3,
+      "answer": "ALE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 13,
+      "dir": "A",
+      "row": 1,
+      "col": 0,
+      "len": 4,
+      "answer": "IRAN",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 14,
+      "dir": "A",
+      "row": 1,
+      "col": 5,
+      "len": 5,
+      "answer": "ESTEE",
+      "score": 70,
+      "theme": false
+    },
+    {
+      "num": 15,
+      "dir": "D",
+      "row": 1,
+      "col": 9,
+      "len": 6,
+      "answer": "EDITOR",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 16,
+      "dir": "A",
+      "row": 1,
+      "col": 11,
+      "len": 4,
+      "answer": "ELAL",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 17,
+      "dir": "A",
+      "row": 2,
+      "col": 0,
+      "len": 10,
+      "answer": "SESAMESEED",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 18,
+      "dir": "D",
+      "row": 2,
+      "col": 4,
+      "len": 6,
+      "answer": "MASSES",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 19,
+      "dir": "A",
+      "row": 2,
+      "col": 11,
+      "len": 4,
+      "answer": "MOLE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 20,
+      "dir": "A",
+      "row": 3,
+      "col": 0,
+      "len": 3,
+      "answer": "LET",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 21,
+      "dir": "A",
+      "row": 3,
+      "col": 4,
+      "len": 4,
+      "answer": "AFEW",
+      "score": 70,
+      "theme": false
+    },
+    {
+      "num": 22,
+      "dir": "A",
+      "row": 3,
+      "col": 9,
+      "len": 5,
+      "answer": "IRATE",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 23,
+      "dir": "D",
+      "row": 3,
+      "col": 10,
+      "len": 3,
+      "answer": "RAT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 24,
+      "dir": "A",
+      "row": 4,
+      "col": 0,
+      "len": 3,
+      "answer": "EKE",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 25,
+      "dir": "A",
+      "row": 4,
+      "col": 4,
+      "len": 4,
+      "answer": "SITS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 26,
+      "dir": "A",
+      "row": 4,
+      "col": 9,
+      "len": 5,
+      "answer": "TALON",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 27,
+      "dir": "A",
+      "row": 5,
+      "col": 2,
+      "len": 5,
+      "answer": "RISES",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 28,
+      "dir": "D",
+      "row": 5,
+      "col": 3,
+      "len": 10,
+      "answer": "INTERPUNCT",
+      "score": 75,
+      "theme": false
+    },
+    {
+      "num": 29,
+      "dir": "A",
+      "row": 5,
+      "col": 8,
+      "len": 6,
+      "answer": "POTENT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 29,
+      "dir": "D",
+      "row": 5,
+      "col": 8,
+      "len": 3,
+      "answer": "PAT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 30,
+      "dir": "A",
+      "row": 6,
+      "col": 0,
+      "len": 6,
+      "answer": "CORNER",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 30,
+      "dir": "D",
+      "row": 6,
+      "col": 0,
+      "len": 3,
+      "answer": "CAB",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 31,
+      "dir": "D",
+      "row": 6,
+      "col": 1,
+      "len": 9,
+      "answer": "OBAMACARE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 32,
+      "dir": "A",
+      "row": 6,
+      "col": 7,
+      "len": 3,
+      "answer": "MAR",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 32,
+      "dir": "D",
+      "row": 6,
+      "col": 7,
+      "len": 3,
+      "answer": "MAT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 33,
+      "dir": "A",
+      "row": 6,
+      "col": 11,
+      "len": 4,
+      "answer": "NOIR",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 34,
+      "dir": "D",
+      "row": 6,
+      "col": 14,
+      "len": 3,
+      "answer": "RON",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 35,
+      "dir": "A",
+      "row": 7,
+      "col": 0,
+      "len": 5,
+      "answer": "ABETS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 36,
+      "dir": "A",
+      "row": 7,
+      "col": 6,
+      "len": 3,
+      "answer": "SAT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 36,
+      "dir": "D",
+      "row": 7,
+      "col": 6,
+      "len": 3,
+      "answer": "SOY",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 37,
+      "dir": "A",
+      "row": 7,
+      "col": 10,
+      "len": 5,
+      "answer": "DUNNO",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 37,
+      "dir": "D",
+      "row": 7,
+      "col": 10,
+      "len": 6,
+      "answer": "DIVEST",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 38,
+      "dir": "A",
+      "row": 8,
+      "col": 0,
+      "len": 4,
+      "answer": "BABE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 39,
+      "dir": "A",
+      "row": 8,
+      "col": 5,
+      "len": 3,
+      "answer": "TOT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 39,
+      "dir": "D",
+      "row": 8,
+      "col": 5,
+      "len": 6,
+      "answer": "TEASET",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 40,
+      "dir": "A",
+      "row": 8,
+      "col": 9,
+      "len": 6,
+      "answer": "GIDEON",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 40,
+      "dir": "D",
+      "row": 8,
+      "col": 9,
+      "len": 7,
+      "answer": "GARCONS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 41,
+      "dir": "A",
+      "row": 9,
+      "col": 1,
+      "len": 6,
+      "answer": "MERSEY",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 42,
+      "dir": "D",
+      "row": 9,
+      "col": 4,
+      "len": 3,
+      "answer": "SHE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 43,
+      "dir": "A",
+      "row": 9,
+      "col": 8,
+      "len": 5,
+      "answer": "SAVES",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 43,
+      "dir": "D",
+      "row": 9,
+      "col": 8,
+      "len": 6,
+      "answer": "SERIAL",
+      "score": 79,
+      "theme": false
+    },
+    {
+      "num": 44,
+      "dir": "A",
+      "row": 10,
+      "col": 1,
+      "len": 5,
+      "answer": "ALPHA",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 45,
+      "dir": "A",
+      "row": 10,
+      "col": 7,
+      "len": 4,
+      "answer": "MERE",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 45,
+      "dir": "D",
+      "row": 10,
+      "col": 7,
+      "len": 5,
+      "answer": "MALTA",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 46,
+      "dir": "A",
+      "row": 10,
+      "col": 12,
+      "len": 3,
+      "answer": "PDF",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 47,
+      "dir": "D",
+      "row": 10,
+      "col": 13,
+      "len": 5,
+      "answer": "DOGMA",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 48,
+      "dir": "D",
+      "row": 10,
+      "col": 14,
+      "len": 5,
+      "answer": "FLEET",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 49,
+      "dir": "A",
+      "row": 11,
+      "col": 1,
+      "len": 5,
+      "answer": "CLUES",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 50,
+      "dir": "A",
+      "row": 11,
+      "col": 7,
+      "len": 4,
+      "answer": "ARCS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 51,
+      "dir": "A",
+      "row": 11,
+      "col": 12,
+      "len": 3,
+      "answer": "LOL",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 52,
+      "dir": "A",
+      "row": 12,
+      "col": 0,
+      "len": 4,
+      "answer": "LAIN",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 52,
+      "dir": "D",
+      "row": 12,
+      "col": 0,
+      "len": 3,
+      "answer": "LCD",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 53,
+      "dir": "A",
+      "row": 12,
+      "col": 5,
+      "len": 10,
+      "answer": "ELLIOTPAGE",
+      "score": 70,
+      "theme": false
+    },
+    {
+      "num": 54,
+      "dir": "D",
+      "row": 12,
+      "col": 6,
+      "len": 3,
+      "answer": "LIP",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 55,
+      "dir": "D",
+      "row": 12,
+      "col": 11,
+      "len": 3,
+      "answer": "PIT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 56,
+      "dir": "A",
+      "row": 13,
+      "col": 0,
+      "len": 4,
+      "answer": "CROC",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 57,
+      "dir": "A",
+      "row": 13,
+      "col": 5,
+      "len": 5,
+      "answer": "TITAN",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 58,
+      "dir": "A",
+      "row": 13,
+      "col": 11,
+      "len": 4,
+      "answer": "ITME",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 59,
+      "dir": "A",
+      "row": 14,
+      "col": 0,
+      "len": 4,
+      "answer": "DENT",
+      "score": 90,
+      "theme": false
+    },
+    {
+      "num": 60,
+      "dir": "A",
+      "row": 14,
+      "col": 6,
+      "len": 4,
+      "answer": "PALS",
+      "score": 80,
+      "theme": false
+    },
+    {
+      "num": 61,
+      "dir": "A",
+      "row": 14,
+      "col": 11,
+      "len": 4,
+      "answer": "TEAT",
+      "score": 84,
+      "theme": false
+    }
+  ]
+}

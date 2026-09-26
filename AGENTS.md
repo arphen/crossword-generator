@@ -2,11 +2,11 @@
 
 ## Overview
 
-`crossword-generator` is the framework-independent generation core extracted
-from the `crossword` application. It contains a deterministic crossword fill
-engine, browser worker protocols and clients, and an in-browser local-model
-runtime. The packages are designed to be consumed by a bundler; this repository
-does not contain the product UI or a deployed service.
+`crossword-generator` contains the framework-independent generation packages
+extracted from the `crossword` application, plus a private 15×15 construction
+lab. The lab uses a vendored Rust fill engine through a local Vite API and
+optional Ollama models for theme ideas and clue drafts. The three npm packages
+remain bundler-consumable and independent of the lab UI.
 
 ## Tech stack
 
@@ -39,6 +39,8 @@ index dependency, VCS, generated, report, or cache directories.
 - `packages/model-runtime/`: local model broker, WebLLM adapter, fake adapter,
   and model worker protocol.
 - `packages/generator/`: construction orchestration and browser worker clients.
+- `apps/lab/`: 15×15 construction studio and local API.
+- `vendor/xfill/`: pinned MIT Rust fill engine and scored crossword word list.
 - `docs/`: integration and agent-facing documentation.
 - `.scripts/`: dependency-free repository-map tooling.
 

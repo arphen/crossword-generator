@@ -23,6 +23,17 @@ const postState = () => {
     });
 };
 
+const postProgress = (
+  requestId: string,
+  progress: Parameters<NonNullable<Parameters<ModelBroker['install']>[1]>>[0],
+) =>
+  workerScope.postMessage({
+    version: 1,
+    type: 'progress',
+    requestId,
+    progress,
+  });
+
 workerScope.onmessage = (event) => {
   const message = parseModelWorkerRequest(event.data);
   if (!message) {
@@ -94,13 +105,21 @@ workerScope.onmessage = (event) => {
   }
   const controller = new AbortController();
   jobs.set(message.requestId, controller);
+  postProgress(message.requestId, {
+    operation: message.operation,
+    text: `${message.operation} started`,
+  });
   const payload = message.payload;
   const operation = message.operation;
   const result =
     operation === 'install'
-      ? broker.install(controller.signal)
+      ? broker.install(controller.signal, (progress) =>
+          postProgress(message.requestId, progress),
+        )
       : operation === 'load'
-        ? broker.load(controller.signal)
+        ? broker.load(controller.signal, (progress) =>
+            postProgress(message.requestId, progress),
+          )
         : operation === 'generate-candidates'
           ? broker.generateCandidates(
               payload as Parameters<ModelBroker['generateCandidates']>[0],
